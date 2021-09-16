@@ -6,21 +6,33 @@
 //                  0         1         2         3         4         5         6         7            
 const char pdu[] = "07917952140230F2040C917952541989680008128013713105210805D005D105D205D3";
 const char pdu2[] = "0C917952541989680008128013713105210805D005D105D205D3";
+const char pdu3[] = "0791797232080060040CA14487772342580000128013716170210441F1980C";
+const char pdu4[] = "0791797232080040040CA14487772342580008129061214053210605D005D105D2";
+
 char pdubuffer[200];  // should be big enough
 
 PDU pduEngine = PDU();
 
-int main() {
-  pduEngine.decodeAddress(pdu,pdubuffer,OCTETS);
-  pduEngine.decodePDU(pdu);
+void decode(const char *P) {
+  pduEngine.decodePDU(P);
   std::cout << "From: " << pduEngine.getSender() << std::endl;
+  std::cout << "Via: " << pduEngine.getSCA() << std::endl;
   std::cout << "Time: " << pduEngine.getTimeStamp() << std::endl;
   std::cout << "Message: ";
-  int l = pduEngine.getUtf8Length();
   const unsigned char *mess = pduEngine.getText();
-  for (int i=0;i<pduEngine.getUtf8Length();i++)
-    std::cout << mess[i];
-  std::cout << std::endl;
+  std::cout << mess << std::endl;
+}
 
-  pduEngine.decodeAddress(pdu2,pdubuffer,NIBBLES);
+int main() {
+  int len;
+  //decode(pdu);
+  //decode(pdu3);
+  //decode(pdu4);
+//  len = pduEngine.encodePDU("0545919886",NATIONAL_NUMERIC,"hello 12",ALPHABET_7BIT);
+//  len = pduEngine.encodePDU("+972545919886",INTL_NUMERIC,"hello 23",ALPHABET_7BIT);
+  len = pduEngine.encodePDU("+972545919886",INTL_NUMERIC,"abcאבג",ALPHABET_16BIT);
+//    pduEngine.setAddress("972545919886",INTL_NUMERIC);
+//    pduEngine.setAddress("0545919886",NATIONAL_NUMERIC);
+//    pduEngine.setAddress("david",ALPHABETIC);
+//  pduEngine.decodeAddress(pdu2,pdubuffer,NIBBLES);
 }

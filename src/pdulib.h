@@ -47,7 +47,7 @@
 #define NPC8    '?'
 
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
-enum eAddressType {NUMERIC,ALPHABETIC};
+enum eAddressType {INTL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
 
 class PDU
@@ -55,57 +55,47 @@ class PDU
 public:
   PDU();
   ~PDU();
-  // encodePDU creates a BINARY record which should be converted to ASCII for sending to modem
-  int encodePDU(unsigned char *pdubuffer, const char *recipient, const char *message, enum eDCS dcs);
-  int encodePDU(unsigned char *pdubuffer, const char *recipient, const char *message);
-  int encodePDU(unsigned char *pdubuffer);  // creates a binary PDU buffer
-  // decodePDU works on the ASCII string as received from the modem, creates an UTF8 text
-  // string that is recovered by the getMessage method
+  int encodePDU(const char *recipient, eAddressType,const char *message, eDCS dcs);
   bool decodePDU(const char *pdu);
-  //  bool setSCA(char *sca);
-  bool setAddress(const char *,eAddressType);
-  bool setMessage(const char *message);
-  bool setCharSet(enum eDCS dcs);
-  // return number of ucs2 octets in output array
-  int pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2);
-  // return number of bytes in the output array utf8
-  // callers responsibilty that utf8 array is big enough
-  int ucs2_to_utf8(unsigned short ucs2, unsigned char *uft8);
-  // convert a UFT-8 string to UCS-2. If string invalid returned value is 0
-  // else a UCS-2 codepoint
-  unsigned short utf8_to_ucs2(unsigned char *utf8);
-  // return the length of the UTF-8 string
-  // 1 is also ASCII 7
-  // if -1 this is not a legal string
-  int utf8Length(unsigned char *utf8);
   const char *getSCA();
   const char *getSender();
   const char *getTimeStamp();
   const unsigned char *getText();
-  int getUtf8Length();
-  bool decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
 private:
-  bool scavalid, recvalid, csvalid, mesvalid;
+  // following for storing decode fields of incoming messages
   int scalength;
   char scabuff[MAX_NUMBER_LENGTH];
-  int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
   int meslength;
   unsigned char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
-  int senderlength;    // for decoding address to user readable
-  char senderbuff[MAX_NUMBER_LENGTH];
   int tslength;
   char tsbuff[20];    // big enough for timestamp
-  enum eDCS dcs;
-  int pduoutindex;
-  void stringToBCD(const char *number, uint8_t *pdu);
+  // following for buiulding an SMS-SUBMIT message - Binary not ASCII
+  int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
+  int smsOffset;
+  unsigned char smsSubmit[200];  // big enough for largest message
+  // helper methods
+  bool setAddress(const char *,eAddressType);
+  bool setMessage(const char *message,eDCS);
+  void stringToBCD(const char *number, unsigned char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
-  int ascii_to_pdu(const char *ascii, uint8_t *pdu);
+  int ascii_to_pdu(const char *ascii, unsigned char *pdu);
   int convert_ascii_to_7bit(const char *ascii, char *a7bit);
   uint8_t gethex(const char *pc);
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
   int convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii);
+  // return number of ucs2 octets in output array
+  int pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2);
+  // callers responsibilty that utf8 array is big enough
+  int ucs2_to_utf8(unsigned short ucs2, unsigned char *utf8);
+  // callers responsibilty that ucs2 array is big enough
+  int utf8_to_ucs2_single(const char *utf8, short *ucs2);  // translate to a single uds2
+  int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
+  // get length of next utf8
+  int utf8Length(const char *);
+  bool decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
+//  int getUtf8Length();
 };
 
 /****************************************************************************

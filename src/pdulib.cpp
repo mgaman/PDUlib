@@ -12,76 +12,58 @@
 PDU::PDU()
 {
   // initialize all local variables
-  scavalid = recvalid = mesvalid = false;
-  csvalid = false;
-  dcs = ALPHABET_16BIT;
+ // scavalid = recvalid = mesvalid = false;
+ // csvalid = false;
+ // dcs = ALPHABET_16BIT;
 }
 
 PDU::~PDU() {}
 
-#if 0
-bool PDU::setSCA(char *sca)
-{
-  bool rc = false;
-  if (strlen(sca) < MAX_NUMBER_LENGTH)
-  {
-    strcpy(scabuff,sca);
-    scalength = strlen(sca);
-    rc = true;
-  }
-  else if (sca == 0)   // sca is optional null string
-  {
-    scalength = 0;
-    rc = true;
-  }
-  scavalid = rc;
-  return rc;
-}
-#endif
-
 /*
   Save recipient phone number, check that it is numeric
   return true if valid
+  Save in smssubmit
+  byte 0 length in nibbles
 */
 bool PDU::setAddress(const char *address,eAddressType at)
 {
   bool rc = false;
-  if (strlen(address) < MAX_NUMBER_LENGTH)
+  addressLength = strlen(address);
+  if ( addressLength < MAX_NUMBER_LENGTH)
   {
-    strcpy(addressBuff, address);
-    // recipient length is from 1st digit to last decimal digit
-    // first character must be a decimal digit or +
-    if (*address == '+')
-      address++;
-    if (isdigit(*address))
-    {
-      addressLength = 0;
-      while (isdigit(*address++))
-        addressLength++;
-      rc = true;
+    smsSubmit[smsOffset++] = addressLength;
+    switch (at) {
+      case INTL_NUMERIC:
+        smsSubmit[smsOffset++] = INTERNATIONAL_NUMBER;
+        stringToBCD(address,(unsigned char *)&smsSubmit[smsOffset]);
+        smsOffset += (strlen(address)+1)/2;
+        break;
+      case NATIONAL_NUMERIC:
+        smsSubmit[smsOffset++] = NATIONAL_NUMBER;
+        stringToBCD(address,(unsigned char *)&smsSubmit[smsOffset]);
+        smsOffset += (strlen(address)+1)/2;
+        break;
+      case ALPHABETIC:
+        smsSubmit[smsOffset++] = 0xD0;
+        ascii_to_pdu(address,(unsigned char *)&smsSubmit[smsOffset]);
+        break;
+      default:
+        return rc;
     }
   }
-  recvalid = rc;
+ // recvalid = rc;
   return rc;
 }
 
-bool PDU::setMessage(const char *mes)
+bool PDU::setMessage(const char *mes,eDCS dcs)
 {
   bool rc = false;
-  mesvalid = rc;
+ // mesvalid = rc;
   return rc;
 }
 
-bool PDU::setCharSet(enum eDCS DCS)
-{
-  bool rc =  (DCS == ALPHABET_7BIT) || (DCS == ALPHABET_16BIT);  // 8 bit not handled
-  csvalid = rc;
-  if (rc)
-    dcs = DCS;
-  return rc;
-}
 
-void PDU::stringToBCD(const char *number, uint8_t *pdu)
+void PDU::stringToBCD(const char *number, unsigned char *pdu)
 {
   int j, targetindex=0;
   for (j = 0; j < addressLength; j++)
@@ -137,7 +119,7 @@ int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
   return w;
 }
 
-int PDU::ascii_to_pdu(const char *ascii, uint8_t *pdu)
+int PDU::ascii_to_pdu(const char *ascii, unsigned char *pdu)
 {
   int r;
   int w;
@@ -159,67 +141,34 @@ int PDU::ascii_to_pdu(const char *ascii, uint8_t *pdu)
   return w;
 }
 
-int PDU::encodePDU(unsigned char *pdubuffer)
-{
-  int sourceIndex = 0, index = 0, length;
-  uint8_t tempbuffer[200]; // more than enough for larget message
-  // sanity check that all items were set
-  if (recvalid /*&& mesvalid*/ && csvalid)
-  {
-    // start building the sms-submit structure
-    pdubuffer[index++] = 0;  // no sca info
-    pdubuffer[index++] = PSU_SMS_SUBMIT;
-    pdubuffer[index++] = 0; // MR
-    pdubuffer[index++] = addressLength;
-    pdubuffer[index++] = *addressBuff == '+' ? INTERNATIONAL_NUMBER : NATIONAL_NUMBER;
-    // now convert recipient to nibble swapped BCD format
-    if (*addressBuff == '+')
-      sourceIndex++;
-    stringToBCD(&addressBuff[sourceIndex], &pdubuffer[index]);
-    index += (addressLength + 1) / 2;
-    // PID
-    pdubuffer[index++] = 0;
-    // DCS
-    pdubuffer[index++] = dcs << DCS_ALPHABET_OFFSET; // all other bits zero
-    // No VP, now endcode message
-    switch (dcs)
-    {
-      case ALPHABET_7BIT:
-//        length = ascii_to_pdu(mesbuff, tempbuffer);
-//        pdubuffer[index++] = strlen(mesbuff);
-        length = ascii_to_pdu("7 bit", tempbuffer);
-        pdubuffer[index++] = strlen("7 bit");
-        break;
-      case ALPHABET_8BIT:
-        length = ascii_to_pdu("8 bit", tempbuffer);
-        pdubuffer[index++] = strlen("8 bit");
-        break;
-      case ALPHABET_16BIT:
-        length = ascii_to_pdu("16 bit", tempbuffer);
-        pdubuffer[index++] = strlen("16 bit");
-        break;
-    }
-    memcpy(&pdubuffer[index], tempbuffer, length);
-    index += length;
-  }
-  return index;
-}
-
-// creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
-int PDU::encodePDU(unsigned char *pdubuffer,const char *recipient, const char *message, enum eDCS dcs)
+/* creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
+    https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/
+*/
+int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, enum eDCS dcs)
 {
   int length = -1;
-  bool rc = setAddress(recipient,NUMERIC);
- // rc &= setMessage(message);
-  rc &= setCharSet(dcs);
-  if (rc)
-    length = encodePDU(pdubuffer);
+  int delta;
+  smsOffset = 0;
+  smsSubmit[smsOffset++] = 17;  // SMS-SUBMIT - no validation period
+  smsSubmit[smsOffset++] = 0;   // message reference
+  setAddress(recipient,at);
+  smsSubmit[smsOffset++] = 0;   // PID
+  smsSubmit[smsOffset++] = dcs; // encoding
+  switch (dcs) {
+    case ALPHABET_7BIT:
+      smsSubmit[smsOffset++] = strlen(message);  // length in septets
+      delta = ascii_to_pdu(message,&smsSubmit[smsOffset]);
+      length = smsOffset + delta; // allow for length byte
+      break;
+    case ALPHABET_16BIT:
+      smsSubmit[smsOffset++] = 1;// length in octets
+      delta = utf8_to_ucs2(message,(char *)&smsSubmit[smsOffset]);
+      smsSubmit[smsOffset-1] = delta;// correct message length
+      length = smsOffset + delta; // allow for length byte
+    default:
+      break;
+  }
   return length;
-}
-
-int PDU::encodePDU(unsigned char *pdubuffer, const char *recipient,const char *message)
-{
-  return encodePDU(pdubuffer, recipient, message, ALPHABET_7BIT);
 }
 
 uint8_t PDU::gethex(const char *pc)
@@ -322,8 +271,8 @@ int PDU::pdu_to_ascii(const char *pdu, int pdulength, char *ascii) {
   int   r;
   int   w;
   int   length;
-  unsigned char ascii7bit[40];
-
+  unsigned char ascii7bit[(pdulength*8)/7];
+  // first decompress the 7-bit characters
   w = 0;
   int index = 0;   // index into the string
   int ovflow = 0;
@@ -347,8 +296,7 @@ int PDU::pdu_to_ascii(const char *pdu, int pdulength, char *ascii) {
   return length;
 }
 
-bool PDU::decodePDU(const char *pdu)
-{
+bool PDU::decodePDU(const char *pdu){
   bool rc = true;
   //char buff[20];
   int index = 0;
@@ -362,7 +310,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2;
 //  std::cout << "SMS Deliver " << X;
   X = gethex(&pdu[index]);
-  decodeAddress(&pdu[index],senderbuff,NIBBLES);
+  decodeAddress(&pdu[index],addressBuff,NIBBLES);
   index += X + 4; // skip over sender number
   pid = gethex(&pdu[index]);
   index += 2;
@@ -412,8 +360,8 @@ bool PDU::decodePDU(const char *pdu)
         utflength = ucs2_to_utf8(ucs2,mesbuff + utfoffset);
         utfoffset += utflength;
       }
-      mesbuff[++utfoffset] = 0;  // end marker
       meslength = utfoffset;
+      mesbuff[utfoffset] = 0;  // end marker
       rc = true;
       break;
     default:
@@ -479,7 +427,8 @@ int PDU::ucs2_to_utf8(unsigned short ucs2, unsigned char *outbuf)
     return 0;
 }
 
-int PDU::utf8Length(unsigned char *utf8) {
+#if 1
+int PDU::utf8Length(const char *utf8) {
     int length = 1;
     unsigned char mask = BITS76ON;
     // look for ascii 7 on 1st byte
@@ -508,12 +457,17 @@ int PDU::utf8Length(unsigned char *utf8) {
     }
     return length;
 }
-
-unsigned short PDU::utf8_to_ucs2(unsigned char *utf8) {
+#endif
+#if 1
+/*
+    convert an utf8 string to a single ucs2
+    return number of octets
+*/
+int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
     unsigned short ucs2 = 0;
     int cont = utf8Length(utf8)-1; // number of continuation bytes
     if (cont < 0)
-        return ucs2;
+        return 0;
     if (cont == 0) {       // ascii 7 bit
         ucs2 = *utf8;
     }
@@ -529,14 +483,16 @@ unsigned short PDU::utf8_to_ucs2(unsigned char *utf8) {
             ucs2 = (ucs2<<6) | (*(utf8++) & BITS0TO5ON);
         }
     }
-    return ucs2;
+    *target = (ucs2 >> 8) | ((ucs2 & 0x0ff) << 8);   // swap bytes
+    return 2;
 }
+#endif
 
 const char *PDU::getSCA() {
   return scabuff;
 }
 const char *PDU::getSender() {
-  return senderbuff;
+  return addressBuff;
 }
 const char *PDU::getTimeStamp() {
   return tsbuff;
@@ -545,9 +501,6 @@ const unsigned char *PDU::getText() {
   return mesbuff;
 }
 
-int PDU::getUtf8Length() {
-  return meslength;
-}
 
 void PDU::BCDtoString(char *output, const char *input,int length) {
   uint8_t X;
@@ -576,19 +529,34 @@ bool PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu t
   // now analyse address type
   int adt = gethex(pdu);
   pdu += 2;
-  if (adt & EXT_MASK == 0) {
-    // dont know how to handle this
-    return rc;
+  if ((adt & EXT_MASK) != 0) {
+    switch ((adt & TON_MASK) >> TON_OFFSET) {
+      case 1:  // international number
+        *output++ = '+';  // add prefix and fall through
+      case 2:  // national number
+        BCDtoString(output,pdu,addressLength);
+        break;
+        rc = true;
+      case 5: // alphabetic
+        break;
+      default:
+        break;
+    }
   }
-  switch ((adt & TON_MASK) >> TON_OFFSET) {
-    case 1:  // international number
-      *output++ = '+';  // add prefix and fall through
-    case 2:  // national number
-      BCDtoString(output,pdu,addressLength);
-      break;
-    case 5: // alphabetic
-      break;
-    default:
-      return rc;
+  else {
+    ; // dont know how to handle EXT
   }
+  return rc;
+}
+
+int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero terminated string
+  int octets=0;
+  while (*utf8) {
+    int len = utf8Length(utf8);
+    utf8_to_ucs2_single(utf8,(short *)ucs2);
+    utf8 += len; // 
+    ucs2 += sizeof(short); 
+    octets += sizeof(short); 
+  }
+  return octets;
 }
