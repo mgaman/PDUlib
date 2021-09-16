@@ -1,0 +1,87 @@
+// C++ headers
+#include <iostream>
+#include <thread>
+#include <queue>
+#include <string>
+
+// C library headers
+#include <stdio.h>
+#include <string.h>
+
+// Linux headers
+#include <fcntl.h> // Contains file controls like O_RDWR
+#include <errno.h> // Error integer and strerror() function
+#include <termios.h> // Contains POSIX terminal control definitions
+#include <unistd.h> // write(), read(), close()
+
+int serial_port;
+//static char read_buf [256];
+std::queue<std::string> inputQueue;
+
+// Create new termios struct, we call it 'tty' for convention
+// No need for "= {0}" at the end as we'll immediately write the existing
+// config to this struct
+struct termios tty;
+
+// threads prototypes
+void serialHandler(int);
+void unsolicited(int sp);
+void startup(int sp);
+// Read in existing settings, and handle any error
+// NOTE: This is important! POSIX states that the struct passed to tcsetattr()
+// must have been initialized with a call to tcgetattr() overwise behaviour
+// is undefined
+
+// Check for errors
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        std::cout <<"Usage: pduapp serial_port\n\n";
+        return 1;
+    }
+    std::string xx = "12q3";
+    std::string yy = "123אבג";
+    std::wstring zz = L"גגג";  // not really portable
+    int ll = xx.length();
+    ll = yy.length();  // in bytes, not codepoints
+    ll = zz.length();   // length in unicode characters
+
+    std::cout << argv[1] << std::endl; 
+    serial_port = open(argv[1], O_RDWR);
+    if (serial_port < 0) 
+        std::cout << "Error " << errno << " from open:" << strerror(errno) << std::endl;
+    else {
+        std::cout << argv[1] << " opened\n";
+        if(tcgetattr(serial_port, &tty) != 0) {
+            std::cout << "Error " << errno << "from tcgetattr: " << strerror(errno) << std::endl;
+        }
+        else {
+            // set 8 bits baud rate 9600 No parity, 1 stop , no flow control
+            tty.c_cflag &= ~PARENB;
+            tty.c_cflag &= ~CSTOPB;
+            tty.c_cflag &= ~CSIZE; // Clear all the size bits
+            tty.c_cflag |= CS8;
+            tty.c_cflag &= ~CRTSCTS; // Disable RTS/CTS hardware flow control
+            tty.c_lflag &= ~ICANON;  // disable canonical mode
+            tty.c_lflag &= ~ECHO; // Disable echo
+            tty.c_lflag &= ~ISIG; // Disable interpretation of INTR, QUIT and SUSP
+            tty.c_iflag &= ~ICRNL;  // do not translate cr to lf
+            tty.c_iflag &= ~IGNCR;  // do not ignore cr
+            // Set in/out baud rate to be 9600
+            cfsetispeed(&tty, B9600);
+            cfsetospeed(&tty, B9600);
+            // Save tty settings, also checking for error
+            if (tcsetattr(serial_port, TCSANOW, &tty) != 0) 
+                std::cout << "Error" << errno << " from tcsetattr: " << strerror(errno) << std::endl;
+            else {
+               std::cout << "Attributes all set\n";
+               std::thread t1(serialHandler,serial_port);
+               std::thread t2(startup,serial_port);
+               t2.join();  // wait until startup finished
+               std::thread t3(unsolicited,serial_port);
+               while (true) {}
+            }
+        }
+        close(serial_port);
+    }
+}
+
