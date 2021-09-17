@@ -23,17 +23,20 @@ void consoleHandler(int sp) {
     }
 }
 
-PDU pduEngine = PDU();
+extern PDU mypdu;
+
 const char *from = "972545919886";
-const char *message = "hello there";
-const char end = 0x1a; // ctrlz 
+//const char *message = "hello there";
+const char *message = "שלום";
+//const char end = 0x1a; // ctrlz 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp) {
-  int len = pduEngine.encodePDU(from,INTL_NUMERIC,message,ALPHABET_7BIT);
+  int len = mypdu.encodePDU(from,INTL_NUMERIC,message,ALPHABET_16BIT);
+  int buflen = strlen(mypdu.getSMS());
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));
     // should wait for ">" but just do a delay instead
   sleep(2);
-  write(sp,pduEngine.getSMS(),len);
-  write(sp,&end,1);
+  write(sp,mypdu.getSMS(),buflen);
+  //write(sp,&end,1);
 } 

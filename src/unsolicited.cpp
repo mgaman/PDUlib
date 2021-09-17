@@ -3,6 +3,7 @@
 #include <queue>
 #include <bitset>
 #include <unistd.h> // write(), read(), close()
+#include <string.h>
 #include "pdulib.h"
 
 extern std::queue<std::string> inputQueue;
@@ -20,10 +21,14 @@ std::string cgregstates[] = {
 /*
     Pop messages off the queue and process them
 */
+
+char *atc = "+AT+CSCA?\r";
+
 void unsolicited(int sp) {
     bool nextLineSMS = false;
     bool ipaddressprinted = false;
     std::cout << "Unsolicited started\n";
+    write (sp,atc,strlen(atc));
     while (true) {
         if (!inputQueue.empty()) {
             std::string response = inputQueue.front();
@@ -51,6 +56,14 @@ void unsolicited(int sp) {
                     std::cout << "Message: " << mypdu.getText() << std::endl;
                 }
                 nextLineSMS = false;
+            }
+            else if (response.compare(0,6,"+CSCA:") == 0) {  // get sca number
+//                std::cout << "SCA number ";
+                int start = response.find('"')+1;
+                int end = response.find(',') -1;
+//                std::cout << response.substr(start,end-start) << std::endl;
+                mypdu.setSCAnumber(response.substr(start,end-start).c_str());
+//                std::cout << mypdu.getSCAnumber() << std::endl;
             }
 #if 0
             else if (response.compare(0,6,"+CIEV:") == 0) {

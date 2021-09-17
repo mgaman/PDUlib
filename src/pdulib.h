@@ -64,6 +64,8 @@ public:
   const char *getSender();
   const char *getTimeStamp();
   const unsigned char *getText();
+  void setSCAnumber(const char *);
+  char *getSCAnumber();
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -74,6 +76,7 @@ private:
   unsigned char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
   int tslength;
   char tsbuff[20];    // big enough for timestamp
+  char scanumber[MAX_NUMBER_LENGTH];
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;

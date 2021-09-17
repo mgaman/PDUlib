@@ -150,7 +150,7 @@ int PDU::ascii_to_pdu(const char *ascii, char *pdu)
   return w;
 }
 
-const char *SCSA = "+97254120032";
+//const char *SCSA = "+97254120032";
 /* creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
     https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/
 */
@@ -161,7 +161,8 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
   char tempbuf[100];
   smsOffset = 0;
   int beginning = 0;
-  setAddress(SCSA,INTL_NUMERIC,OCTETS); // set SCSA address
+//  std::cout << getSCAnumber() << std::endl;
+  setAddress(getSCAnumber(),INTL_NUMERIC,OCTETS); // set SCSA address
   beginning = smsOffset;     // length parameter to +CMGS starts from
   smsSubmit[smsOffset++] = 1;   // SMS-SUBMIT - no validation period
   smsSubmit[smsOffset++] = 0;   // message reference
@@ -177,7 +178,6 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
     default:
       break;
   }
-//  smsSubmit[smsOffset++] = dcs; // encoding
   switch (dcs) {
     case ALPHABET_7BIT:
       smsSubmit[smsOffset++] = strlen(message);  // length in septets
@@ -614,4 +614,12 @@ int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero
 
 const char *PDU::getSMS(){
   return smsSubmit;
+}
+
+void PDU::setSCAnumber(const char *n){
+  strcpy(scanumber,n);
+}
+
+char *PDU::getSCAnumber() {
+  return this->scanumber;
 }

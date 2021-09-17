@@ -16,6 +16,7 @@ const char *atcommands[] = {
     "ATE1\r"
     ,"AT+CLIP=1\r" // enable callerid same A6/SIM900
     ,"AT+CMGF=0\r"  // SMS PDU mode  same
+//    ,"AT+CSCA?\r"    // get SCSA number
 #if 0
     ,"AT+SAPBR=3,1,\"APN\",\"" DEFAULT_APN "\"\r" 
     ,"AT+SAPBR=2,1\r"  // GET IP ADDRESS
@@ -47,7 +48,7 @@ void startup(int sp) {
             }
             else
                 virginState = false;
-            std::cout << "Stage " << stage << std::endl;
+//            std::cout << "Stage " << stage << std::endl;
             switch (stage) {
                 case 0:  // waiting for CREG   
 #if 0
