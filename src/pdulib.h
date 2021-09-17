@@ -55,7 +55,10 @@ class PDU
 public:
   PDU();
   ~PDU();
+  // stuff when sending a message
   int encodePDU(const char *recipient, eAddressType,const char *message, eDCS dcs);
+  const char *getSMS();
+  // stuff when receiving a message
   bool decodePDU(const char *pdu);
   const char *getSCA();
   const char *getSender();
@@ -74,15 +77,16 @@ private:
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
-  unsigned char smsSubmit[200];  // big enough for largest message
+  char smsSubmit[200];  // big enough for largest message
   // helper methods
-  bool setAddress(const char *,eAddressType);
+  bool setAddress(const char *,eAddressType,eLengthType);
   bool setMessage(const char *message,eDCS);
-  void stringToBCD(const char *number, unsigned char *pdu);
+  void stringToBCD(const char *number, char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
-  int ascii_to_pdu(const char *ascii, unsigned char *pdu);
+  int ascii_to_pdu(const char *ascii, char *pdu);
   int convert_ascii_to_7bit(const char *ascii, char *a7bit);
   uint8_t gethex(const char *pc);
+  void putHex(unsigned char b, char *target);
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
   int convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii);
   // return number of ucs2 octets in output array

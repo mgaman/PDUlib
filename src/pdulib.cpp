@@ -25,27 +25,32 @@ PDU::~PDU() {}
   Save in smssubmit
   byte 0 length in nibbles
 */
-bool PDU::setAddress(const char *address,eAddressType at)
+bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
 {
   bool rc = false;
   addressLength = strlen(address);
+  if (*address == '+')
+    addressLength--;  // ignore leading +
   if ( addressLength < MAX_NUMBER_LENGTH)
   {
-    smsSubmit[smsOffset++] = addressLength;
+    if (lt==NIBBLES)
+      smsSubmit[smsOffset++] = addressLength;
+    else
+      smsSubmit[smsOffset++] = ((addressLength+1)/2)+1; // add 1 for length
     switch (at) {
       case INTL_NUMERIC:
         smsSubmit[smsOffset++] = INTERNATIONAL_NUMBER;
-        stringToBCD(address,(unsigned char *)&smsSubmit[smsOffset]);
+        stringToBCD(address,&smsSubmit[smsOffset]);
         smsOffset += (strlen(address)+1)/2;
         break;
       case NATIONAL_NUMERIC:
         smsSubmit[smsOffset++] = NATIONAL_NUMBER;
-        stringToBCD(address,(unsigned char *)&smsSubmit[smsOffset]);
+        stringToBCD(address,&smsSubmit[smsOffset]);
         smsOffset += (strlen(address)+1)/2;
         break;
       case ALPHABETIC:
         smsSubmit[smsOffset++] = 0xD0;
-        ascii_to_pdu(address,(unsigned char *)&smsSubmit[smsOffset]);
+        ascii_to_pdu(address,&smsSubmit[smsOffset]);
         break;
       default:
         return rc;
@@ -63,9 +68,11 @@ bool PDU::setMessage(const char *mes,eDCS dcs)
 }
 
 
-void PDU::stringToBCD(const char *number, unsigned char *pdu)
+void PDU::stringToBCD(const char *number, char *pdu)
 {
   int j, targetindex=0;
+  if (*number == '+')  // ignore leading +
+    number++;
   for (j = 0; j < addressLength; j++)
   {
     if ((j & 1) == 1) // odd, upper
@@ -76,7 +83,9 @@ void PDU::stringToBCD(const char *number, unsigned char *pdu)
     }
     else
     {
-      pdu[targetindex] &= 0xf0;  // clear lower
+      // prime in case this is the last byte
+      pdu[targetindex] = 0xf0;
+//      pdu[targetindex] &= 0xf0;  // clear lower
       pdu[targetindex] += *number++ - '0';
     }
   }
@@ -119,7 +128,7 @@ int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
   return w;
 }
 
-int PDU::ascii_to_pdu(const char *ascii, unsigned char *pdu)
+int PDU::ascii_to_pdu(const char *ascii, char *pdu)
 {
   int r;
   int w;
@@ -141,6 +150,7 @@ int PDU::ascii_to_pdu(const char *ascii, unsigned char *pdu)
   return w;
 }
 
+const char *SCSA = "+97254120032";
 /* creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
     https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/
 */
@@ -148,12 +158,26 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
 {
   int length = -1;
   int delta;
+  char tempbuf[100];
   smsOffset = 0;
-  smsSubmit[smsOffset++] = 17;  // SMS-SUBMIT - no validation period
+  int beginning = 0;
+  setAddress(SCSA,INTL_NUMERIC,OCTETS); // set SCSA address
+  beginning = smsOffset;     // length parameter to +CMGS starts from
+  smsSubmit[smsOffset++] = 1;   // SMS-SUBMIT - no validation period
   smsSubmit[smsOffset++] = 0;   // message reference
-  setAddress(recipient,at);
+  setAddress(recipient,at,NIBBLES);
   smsSubmit[smsOffset++] = 0;   // PID
-  smsSubmit[smsOffset++] = dcs; // encoding
+  switch (dcs) {
+    case ALPHABET_7BIT:
+      smsSubmit[smsOffset++] = DCS_7BIT_ALPHABET_MASK;
+      break;
+    case ALPHABET_16BIT:
+      smsSubmit[smsOffset++] = DCS_16BIT_ALPHABET_MASK;
+      break;
+    default:
+      break;
+  }
+//  smsSubmit[smsOffset++] = dcs; // encoding
   switch (dcs) {
     case ALPHABET_7BIT:
       smsSubmit[smsOffset++] = strlen(message);  // length in septets
@@ -168,9 +192,22 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
     default:
       break;
   }
-  return length;
+  // now convert from binary to printable
+  int newoffset = 0;
+  for (int i=0;i<length;i++) {
+    putHex(smsSubmit[i],&tempbuf[newoffset]);
+    newoffset += 2;
+  }
+  // copy back
+  length;
+  memcpy(smsSubmit,tempbuf,length*2);
+  smsSubmit[length*2] = 0x1a;  // add ctrl z
+  smsSubmit[(length*2)+1] = 0;  // add end marker
+
+  return length - beginning;
 }
 
+// convert 2 printable characters to 1 byte
 uint8_t PDU::gethex(const char *pc)
 {
   int i;
@@ -184,6 +221,20 @@ uint8_t PDU::gethex(const char *pc)
   else
     i += (uint8_t(*pc) - 'A' + 10);
   return i;
+}
+
+// convert 1 byte to 2 printable characters in hex
+void PDU::putHex(unsigned char b, char *target) {
+  // upper nibble
+  if ((b>>4) <= 9)
+    *target++ = (b>>4) + '0';
+  else
+    *target++ = (b>>4) + 'A' - 10;
+  // lower nibble
+  if ((b&0xf) <= 9)
+    *target++ = (b&0xf) + '0';
+  else
+    *target++ = (b&0xf) + 'A' - 10;
 }
 /*
     length is in octets, output buffer ucs2 must be big enough to receive the results
@@ -559,4 +610,8 @@ int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero
     octets += sizeof(short); 
   }
   return octets;
+}
+
+const char *PDU::getSMS(){
+  return smsSubmit;
 }

@@ -48,13 +48,7 @@ void unsolicited(int sp) {
             else if (nextLineSMS) {
                 if (mypdu.decodePDU(response.c_str())) {
                     std::cout << "From: " << mypdu.getSender() << std::endl;
-                    int len = mypdu.getUtf8Length();
-                    const unsigned char *text = mypdu.getText();
-                    std::cout << "Message: ";
-                    for (int i=0;i<len;i++) {
-                        std::cout << text[i];   // works for utf-8
-                    }
-                    std::cout << std::endl;
+                    std::cout << "Message: " << mypdu.getText() << std::endl;
                 }
                 nextLineSMS = false;
             }

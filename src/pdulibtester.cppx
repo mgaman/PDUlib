@@ -29,8 +29,8 @@ int main() {
   //decode(pdu3);
   //decode(pdu4);
 //  len = pduEngine.encodePDU("0545919886",NATIONAL_NUMERIC,"hello 12",ALPHABET_7BIT);
-//  len = pduEngine.encodePDU("+972545919886",INTL_NUMERIC,"hello 23",ALPHABET_7BIT);
-  len = pduEngine.encodePDU("+972545919886",INTL_NUMERIC,"abcאבג",ALPHABET_16BIT);
+//  len = pduEngine.encodePDU("972545919886",INTL_NUMERIC,"hello 23",ALPHABET_7BIT);
+  len = pduEngine.encodePDU("972545919886",INTL_NUMERIC,"abcאבג",ALPHABET_16BIT);
 //    pduEngine.setAddress("972545919886",INTL_NUMERIC);
 //    pduEngine.setAddress("0545919886",NATIONAL_NUMERIC);
 //    pduEngine.setAddress("david",ALPHABETIC);

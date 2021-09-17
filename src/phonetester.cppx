@@ -27,6 +27,8 @@ struct termios tty;
 void serialHandler(int);
 void unsolicited(int sp);
 void startup(int sp);
+void consoleHandler(int sp);
+
 // Read in existing settings, and handle any error
 // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
 // must have been initialized with a call to tcgetattr() overwise behaviour
@@ -38,13 +40,6 @@ int main(int argc, char *argv[]) {
         std::cout <<"Usage: pduapp serial_port\n\n";
         return 1;
     }
-    std::string xx = "12q3";
-    std::string yy = "123אבג";
-    std::wstring zz = L"גגג";  // not really portable
-    int ll = xx.length();
-    ll = yy.length();  // in bytes, not codepoints
-    ll = zz.length();   // length in unicode characters
-
     std::cout << argv[1] << std::endl; 
     serial_port = open(argv[1], O_RDWR);
     if (serial_port < 0) 
@@ -78,6 +73,7 @@ int main(int argc, char *argv[]) {
                std::thread t2(startup,serial_port);
                t2.join();  // wait until startup finished
                std::thread t3(unsolicited,serial_port);
+               std::thread t4(consoleHandler,serial_port);
                while (true) {}
             }
         }
