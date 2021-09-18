@@ -28,7 +28,6 @@ extern PDU mypdu;
 const char *from = "**********";
 //const char *message = "hello there";
 const char *message = "שלום";
-//const char end = 0x1a; // ctrlz 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp) {
   int len = mypdu.encodePDU(from,INTERNATIONAL_NUMERIC,message,ALPHABET_16BIT);
@@ -36,7 +35,7 @@ void sendSMS(int sp) {
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));
     // should wait for ">" but just do a delay instead
-  sleep(2);
+  sleep(1);
   write(sp,mypdu.getSMS(),buflen);
   //write(sp,&end,1);
 } 

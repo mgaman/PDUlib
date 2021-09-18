@@ -1,3 +1,5 @@
+<p align="center"><img src="images/modem.png"></p>  
+
 # PDUlib
 Encode/Decode PDU for sending/receiving SMS.
 ## Alphabets
@@ -90,3 +92,11 @@ std::cout << mypdu.getSender() << std::endl;  // prints "+972nnnnnnnnn"
 std::cout << mypdu.getText() << std::endl;  // prints "Hello"
 std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
 ```
+## Example provided
+### phonetester.cpp
+This is the main module. The main function expects 1 parameter, the serial port of the modem. The value of this parameter is defined in .vscode/launch.json/args.  
+After opening the serial port and configuring it correctly, two threads are started up.   **serialHandler** reads all incoming data from the modem, packages up complete lines and places the lines into a queue.  
+**startup** configures the modem e.g. by setting SMS PDU mode and then exits.  
+Once **startup** finishes two more threads are started up.  
+**unsolicited** reads discrete lines from the queue created by **serialHandler** and processes each one as needed. I have provided some examples, feel free to add more.  
+**consoleHandle** is a crude mechanism to kick of actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
