@@ -47,7 +47,7 @@
 #define NPC8    '?'
 
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
-enum eAddressType {INTL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
+enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
 
 class PDU

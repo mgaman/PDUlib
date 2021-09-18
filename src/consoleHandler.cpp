@@ -31,7 +31,7 @@ const char *message = "שלום";
 //const char end = 0x1a; // ctrlz 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp) {
-  int len = mypdu.encodePDU(from,INTL_NUMERIC,message,ALPHABET_16BIT);
+  int len = mypdu.encodePDU(from,INTERNATIONAL_NUMERIC,message,ALPHABET_16BIT);
   int buflen = strlen(mypdu.getSMS());
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));

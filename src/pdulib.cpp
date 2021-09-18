@@ -38,7 +38,7 @@ bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
     else
       smsSubmit[smsOffset++] = ((addressLength+1)/2)+1; // add 1 for length
     switch (at) {
-      case INTL_NUMERIC:
+      case INTERNATIONAL_NUMERIC:
         smsSubmit[smsOffset++] = INTERNATIONAL_NUMBER;
         stringToBCD(address,&smsSubmit[smsOffset]);
         smsOffset += (strlen(address)+1)/2;
@@ -163,7 +163,7 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
   smsOffset = 0;
   int beginning = 0;
 //  std::cout << getSCAnumber() << std::endl;
-  setAddress(getSCAnumber(),INTL_NUMERIC,OCTETS); // set SCSA address
+  setAddress(getSCAnumber(),INTERNATIONAL_NUMERIC,OCTETS); // set SCSA address
   beginning = smsOffset;     // length parameter to +CMGS starts from
   smsSubmit[smsOffset++] = 1;   // SMS-SUBMIT - no validation period
   smsSubmit[smsOffset++] = 0;   // message reference
