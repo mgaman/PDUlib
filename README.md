@@ -53,21 +53,23 @@ It is essential to configure the serial port correctly as some drivers edit inco
 This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope of this document.
 ```
 #include <pdulib.h>
-PDU mypdu = PDU(); 
-sp = open("/dev/ttyUSB0", O_RDWR);  
-// ensure that the modem is in PDU mode
-write(sp,"AT+CMGF=0\r",10); 
-// discover and save SCA number  
-write(sp,"AT+CSCA\r",11);  
---> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
-mypdu.setSCAnumber("nnnnnn");  
-// create an SMS buffer  
-int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"hi there",ALPHABET_7BIT);  
-char temp[20];  
-sprintf(temp,"AT+CMGS=%d\r",len); // create the command 
-write(sp,temp,strlen(temp));    // write command to modem  
-sleep(1);   // wait for > response to pass  
-write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
+int main(int argc,char *argv[]) {  
+    PDU mypdu = PDU(); 
+    sp = open(argv[1], O_RDWR);  
+    // ensure that the modem is in PDU mode
+    write(sp,"AT+CMGF=0\r",10); 
+    // discover and save SCA number  
+    write(sp,"AT+CSCA\r",11);  
+    --> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
+    mypdu.setSCAnumber("nnnnnn");  
+    // create an SMS buffer  
+    int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"hi there",ALPHABET_7BIT);  
+    char temp[20];  
+    sprintf(temp,"AT+CMGS=%d\r",len); // create the command 
+    write(sp,temp,strlen(temp));    // write command to modem  
+    sleep(1);   // wait for > response to pass  
+    write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
+}  
 ```
 If you wanted to send something not ASCII the encodePDU line would look like
 ```
@@ -83,14 +85,16 @@ arrived from the GSM modem via the serial port. The code below would print out t
 Note it is not necessary to save the SCA number if just handling incoming messages.
 ```
 #include <pdulib.h>
-PDU mypdu = PDU(); 
-sp = open("/dev/ttyUSB0", O_RDWR);  
-// ensure that the modem is in PDU mode
-write(sp,"AT+CMGF=0\r",10); 
-mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06");
-std::cout << mypdu.getSender() << std::endl;  // prints "+972nnnnnnnnn"
-std::cout << mypdu.getText() << std::endl;  // prints "Hello"
-std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
+int main(int argc,*argv[]) {
+    PDU mypdu = PDU(); 
+    sp = open(argv[1], O_RDWR);  
+    // ensure that the modem is in PDU mode
+    write(sp,"AT+CMGF=0\r",10); 
+    mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06");
+    std::cout << mypdu.getSender() << std::endl;  // prints "+972nnnnnnnnn"
+    std::cout << mypdu.getText() << std::endl;  // prints "Hello"
+    std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
+}  
 ```
 ## Example provided
 ### phonetester.cpp
@@ -99,4 +103,4 @@ After opening the serial port and configuring it correctly, two threads are star
 **startup** configures the modem e.g. by setting SMS PDU mode and then exits.  
 Once **startup** finishes two more threads are started up.  
 **unsolicited** reads discrete lines from the queue created by **serialHandler** and processes each one as needed. I have provided some examples, feel free to add more.  
-**consoleHandle** is a crude mechanism to kick of actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
+**consoleHandle** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
