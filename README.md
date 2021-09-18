@@ -40,3 +40,28 @@ AT+CSCA?
 ## getSMS
 **const char *getSMS()**  
 This returns the address of the buufer created by **encodePDU**. The buffer already contains CTRL/Z as its last character so can be used as is
+# Development and Debugging
+The code was developed in VS Code and Ubuntu desktop environment.
+## Desktop
+My GSM modem is an SIM900 Arduino breakout board connected to an FTDI USB-Serial device, ths it appears as an /dev/ttyUSB* device.  
+Debugging in desktop mode is more convenient as it allows on to set breakpoint, watch variables etc. Something not available to the Arduino developer.  
+### Serial port
+It is essential to configure the serial port correctly as some drivers edit incoming data in an annoying way e.g. converting carriage returns to line feeds.
+### Typical Usage
+This is C++ pseudo code  
+    sp = open("/dev/ttyUSB0", O_RDWR);  
+    PDU mypdu = PDU(); 
+    // ensure that the modem is in PDU mode
+    write(sp,"AT+CMGF=0\r",10); 
+    // discover and save SCA number  
+    write(sp,"AT+CSCA\r",11);  
+    --> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
+    mypdu.setSCAnumber("nnnnnn");  
+    // create an SMS buffer  
+    int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"hi there",ALPHABET_7BIT);  
+    char temp[20];  
+    sprintf("AT+CMGS: %d\r",len);  
+    write(sp,temp,strlen(temp));    // write command to modem  
+    sleep(1);   // wait for > response to pass  
+    write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
+
