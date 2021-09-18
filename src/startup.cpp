@@ -10,7 +10,7 @@ extern std::queue<std::string> inputQueue;
     Initialization of modem where we send a command and expect a response
     usually OK within a set time
 */
-#define DEFAULT_APN "uinternet"
+#define DEFAULT_APN "******"
 
 const char *atcommands[] = {
     "ATE1\r"
@@ -25,7 +25,7 @@ const char *atcommands[] = {
     ,"AT+SAPBR=2,1\r"  // GET IP ADDRESS
     ,"AT+HTTPINIT\r"
     ,"AT+HTTPPARA=\"CID\",1\r"
-    ,"AT+HTTPPARA=\"URL\",\"henrylineage.com\"\r"
+    ,"AT+HTTPPARA=\"URL\",\"******.com\"\r"
     ,"AT+HTTPACTION=0\r"
 #endif
 };
