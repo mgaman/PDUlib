@@ -25,7 +25,7 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *from = "972545919886";
+const char *from = "**********";
 //const char *message = "hello there";
 const char *message = "שלום";
 //const char end = 0x1a; // ctrlz 

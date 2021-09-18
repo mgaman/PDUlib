@@ -48,7 +48,7 @@ Debugging in desktop mode is more convenient as it allows one to set breakpoints
 ### Serial port
 It is essential to configure the serial port correctly as some drivers edit incoming data in an annoying way e.g. converting carriage returns to line feeds.
 ### Typical Usage Sending an SMS
-This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope here.
+This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope of this document.
 ```
 #include <pdulib.h>
 PDU mypdu = PDU(); 

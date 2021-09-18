@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
 char pdubuffer[200];  // should be big enough
 PDU pduEngine = PDU();
-const char *from = "972545919886";
+const char *from = "********";
 //const char *message = "hello there";
 const char *message = "aaaששש";
 char writeBuf[50];   // general purpose
