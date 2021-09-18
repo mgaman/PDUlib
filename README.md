@@ -67,5 +67,7 @@ write(sp,temp,strlen(temp));    // write command to modem
 sleep(1);   // wait for > response to pass  
 write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
 ```
-
-
+If you wanted to send something not ASCII the encodePDU line would look like
+```
+int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);  
+```
