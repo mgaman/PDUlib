@@ -60,12 +60,12 @@ public:
   const char *getSMS();
   // stuff when receiving a message
   bool decodePDU(const char *pdu);
-  const char *getSCA();
+  //const char *getSCA();
+  char *getSCAnumber();
   const char *getSender();
   const char *getTimeStamp();
   const unsigned char *getText();
   void setSCAnumber(const char *);
-  char *getSCAnumber();
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -80,18 +80,22 @@ private:
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
-  char smsSubmit[200];  // big enough for largest message
+  char smsSubmit[360];  // big enough for largest message
   // helper methods
   bool setAddress(const char *,eAddressType,eLengthType);
-  bool setMessage(const char *message,eDCS);
+  //bool setMessage(const char *message,eDCS);
+
   void stringToBCD(const char *number, char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
+
   int ascii_to_pdu(const char *ascii, char *pdu);
+  int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
+
   int convert_ascii_to_7bit(const char *ascii, char *a7bit);
+  int convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii);
+
   uint8_t gethex(const char *pc);
   void putHex(unsigned char b, char *target);
-  int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
-  int convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii);
   // return number of ucs2 octets in output array
   int pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2);
   // callers responsibilty that utf8 array is big enough
@@ -102,7 +106,6 @@ private:
   // get length of next utf8
   int utf8Length(const char *);
   bool decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
-//  int getUtf8Length();
 };
 
 /****************************************************************************

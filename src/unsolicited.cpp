@@ -22,7 +22,7 @@ std::string cgregstates[] = {
     Pop messages off the queue and process them
 */
 
-char *atc = "+AT+CSCA?\r";
+const char *atc = "+AT+CSCA?\r";
 
 void unsolicited(int sp) {
     bool nextLineSMS = false;

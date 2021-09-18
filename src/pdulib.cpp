@@ -60,13 +60,14 @@ bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
   return rc;
 }
 
+#if 0
 bool PDU::setMessage(const char *mes,eDCS dcs)
 {
   bool rc = false;
  // mesvalid = rc;
   return rc;
 }
-
+#endif
 
 void PDU::stringToBCD(const char *number, char *pdu)
 {
@@ -199,7 +200,6 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
     newoffset += 2;
   }
   // copy back
-  length;
   memcpy(smsSubmit,tempbuf,length*2);
   smsSubmit[length*2] = 0x1a;  // add ctrl z
   smsSubmit[(length*2)+1] = 0;  // add end marker
@@ -509,7 +509,6 @@ int PDU::utf8Length(const char *utf8) {
     return length;
 }
 #endif
-#if 1
 /*
     convert an utf8 string to a single ucs2
     return number of octets
@@ -537,11 +536,12 @@ int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
     *target = (ucs2 >> 8) | ((ucs2 & 0x0ff) << 8);   // swap bytes
     return 2;
 }
-#endif
 
+#if 0
 const char *PDU::getSCA() {
   return scabuff;
 }
+#endif
 const char *PDU::getSender() {
   return addressBuff;
 }
@@ -621,5 +621,5 @@ void PDU::setSCAnumber(const char *n){
 }
 
 char *PDU::getSCAnumber() {
-  return this->scanumber;
+  return scanumber;
 }
