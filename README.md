@@ -25,7 +25,7 @@ Returns the phone number of the sender
 **const char *getTimeStamp()**<br>
 Returns the timestamp of the message in the format YYMMDDHHMMSS<br>
 ## getText
-**const unsigned char *getText()**<br>
+**const char *getText()**<br>
 Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.<br>
 ## encodePDU
 **int encodePDU(const char *recipient, eAddressType,const char *message, eDCS dcs)**<br>
@@ -38,17 +38,19 @@ Returns the body of the message. Note that it is a UTF-8 string so should be dis
 **void setSCAnumber(const char *)**<br>
 Before one can encode an PDU the number of the Service Centre must be known.  
 Typically this can be discovered in a GSM modem by issuing the command  
-AT+CSCA?
-## getSMS
-**const char *getSMS()**  
+AT+CSCA?  
+## getSMS  
+**const char *getSMS()**<br>
 This returns the address of the buffer created by **encodePDU**. The buffer already contains CTRL/Z as its last character so can be used as is
 # Development and Debugging
 The code was developed in VS Code and Ubuntu desktop environment.
 ## Desktop
 My GSM modem is an SIM900 Arduino breakout board connected to an FTDI USB-Serial device, thus it appears as an /dev/ttyUSB* device.  
+The modem needs its own power supply as the current supplied by the FTDI is insufficient.  
 Debugging in desktop mode is more convenient as it allows one to set breakpoints, watch variables etc. Something not available to the Arduino developer.  
 ### Serial port
-It is essential to configure the serial port correctly as some drivers edit incoming data in an annoying way e.g. converting carriage returns to line feeds.
+It is essential to configure the serial port correctly as some drivers edit incoming data in an annoying way e.g. converting carriage returns to line feeds.  
+Read the main() code in phonetester.cpp.
 ### Typical Usage Sending an SMS
 This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope of this document.
 ```
@@ -85,7 +87,7 @@ arrived from the GSM modem via the serial port. The code below would print out t
 Note it is not necessary to save the SCA number if just handling incoming messages.
 ```
 #include <pdulib.h>
-int main(int argc,*argv[]) {
+int main(int argc,char *argv[]) {
     PDU mypdu = PDU(); 
     sp = open(argv[1], O_RDWR);  
     // ensure that the modem is in PDU mode
