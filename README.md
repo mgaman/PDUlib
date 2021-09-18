@@ -36,4 +36,3 @@ Returns the body of the message. Note that it is a UTF-8 string so should be dis
 Before one can encode an PDU the number of the Service Centre must be known.  
 Typically this can be discovered in a GSM modem by issuing the command  
 AT+CSCA?
-
