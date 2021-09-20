@@ -139,8 +139,7 @@ void setup() {
   delay(1000);
   GSM.print(temp);
   delay(1000);
-  const char *sms = mypdu.getSMS();
-  GSM.print(sms);
+  GSM.print(mypdu.getSMS());
 }
 
 void loop() {
