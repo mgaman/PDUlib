@@ -1,3 +1,4 @@
+//#define PM
 #include <string>
 /*
   A library for encoding/decoding PDU strings

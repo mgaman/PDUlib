@@ -7,7 +7,7 @@ Both the GSM 7 bit alphabet and UCS-2 16 bit alphabets are supported which means
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
 ## Work in progress
-The size of RAM needed will be a problem for the Arduino user. I am working on a solution that moves as much static data as possible to flash.  
+Incoming messages with an Alphabetic origin field are not yet supported. I do not yet have an example for debugging.
 # API
 ## decodePDU
 **bool decodePDU(const char *pdu)**<br>
@@ -16,7 +16,7 @@ If using a GSM modem, in PDU mode <b>not TEXT mode</b> an incoming message is di
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.<br>
 After decoding the PDU its constituent parts can be recovered with the following methods.
 ## getSCAnumber
-**char *getSCAnumber()**<br>
+**const char *getSCAnumber()**<br>
 Returns the number of the SCA, i.e. the Service Centre that delivered the message.<br>
 ## getSender
 **const char *getSender()**<br>
@@ -105,4 +105,46 @@ After opening the serial port and configuring it correctly, two threads are star
 **startup** configures the modem e.g. by setting SMS PDU mode and then exits.  
 Once **startup** finishes two more threads are started up.  
 **unsolicited** reads discrete lines from the queue created by **serialHandler** and processes each one as needed. I have provided some examples, feel free to add more.  
-**consoleHandle** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
+**consoleHandler** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
+### Arduino
+When compiling for Arduino AVR, uncomment the line **#define PM** at the beginning of pdulib.h.  
+This transfers some static tables to progmem and frees up 128 bytes of RAM.
+```
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <pdulib.h>
+
+SoftwareSerial GSM(2,3);
+PDU mypdu = PDU();
+void setup() {
+  char temp[20];
+  Serial.begin(9600);
+  GSM.begin(9600);
+  mypdu.decodePDU("07917952140230F2040C9179525419896800001280018153832106D17B594ECF03");
+  Serial.println(mypdu.getSCAnumber());
+  mypdu.setSCAnumber(mypdu.getSCAnumber());
+  Serial.println(mypdu.getSender());
+  Serial.println(mypdu.getTimeStamp());
+  Serial.println(mypdu.getText());
+  // write your message and recipient number here
+//  int len = mypdu.encodePDU("+***********",INTERNATIONAL_NUMERIC,"Hello",ALPHABET_7BIT);
+//  int len = mypdu.encodePDU("***********",NATIONAL_NUMERIC,"Hello",ALPHABET_7BIT);
+//  int len = mypdu.encodePDU("+***********",INTERNATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);
+  int len = mypdu.encodePDU("***********",NATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);
+  Serial.print("SMS length ");Serial.println(len);
+  Serial.println(mypdu.getSMS());
+  sprintf(temp,"AT+CMGS=%d\r",len);
+  Serial.println(temp);
+  GSM.print("AT+CMGF=0\r");
+  delay(1000);
+  GSM.print(temp);
+  delay(1000);
+  const char *sms = mypdu.getSMS();
+  GSM.print(sms);
+}
+
+void loop() {
+  if (GSM.available())
+    Serial.write(GSM.read());
+}
+```
