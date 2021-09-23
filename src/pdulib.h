@@ -106,7 +106,7 @@ public:
    * 
    * @return char* Pointer to the number
    */
-  char *getSCAnumber();
+  const char *getSCAnumber();
   /**
    * @brief Get the senders phone number from a decoded PDU
    * 

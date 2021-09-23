@@ -9,7 +9,7 @@ The code is written in plain C++ so it should be usable by both desktop and Ardu
 ## Work in progress
 Incoming messages with an Alphabetic origin field are not yet supported. I do not yet have an example for debugging.
 ## Web based documentation
-Can be read [Here](./docs/html/index.html)
+Can be read <a href="./docs/html/index.html">Here</a>
 # API
 ## decodePDU
 **bool decodePDU(const char *pdu)**<br>

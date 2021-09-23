@@ -619,6 +619,6 @@ void PDU::setSCAnumber(const char *n){
   strcpy(scanumber,n);
 }
 
-char *PDU::getSCAnumber() {
+const char *PDU::getSCAnumber() {
   return scanumber;
 }

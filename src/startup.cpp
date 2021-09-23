@@ -60,14 +60,16 @@ void startup(int sp) {
                     if (true) {
 #endif
                         stage = 1;
-                        write(sp,atcommands[atindex++],strlen(atcommands[atindex]));  // no echo
+                        write(sp,atcommands[atindex],strlen(atcommands[atindex]));  // no echo
+                        atindex++;
                     }
                     break;
                 case 1 ... LAST_CASE:
                     if (response.compare(0,2,"OK") == 0 || response.compare(0,5,"ERROR")== 0) {
                          //   vTaskDelay(5000/portTICK_PERIOD_MS);
                             sleep(1); 
-                            write(sp,atcommands[atindex++],strlen(atcommands[atindex]));  // rest of commands
+                            write(sp,atcommands[atindex],strlen(atcommands[atindex]));  // rest of commands
+                            atindex++;
                             stage++;
                         }
                     break;
