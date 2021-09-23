@@ -1,0 +1,169 @@
+\hypertarget{class_p_d_u}{}\doxysection{P\+DU Class Reference}
+\label{class_p_d_u}\index{PDU@{PDU}}
+
+
+\mbox{\hyperlink{class_p_d_u}{P\+DU}} class, provides methods to decode a \mbox{\hyperlink{class_p_d_u}{P\+DU}} message or encode a new one.  
+
+
+
+
+{\ttfamily \#include $<$pdulib.\+h$>$}
+
+\doxysubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{class_p_d_u_a7e797d9408688f727862f7ed10784886}{encode\+P\+DU}} (const char $\ast$recipient, const char $\ast$message)
+\begin{DoxyCompactList}\small\item\em Encode a \mbox{\hyperlink{class_p_d_u}{P\+DU}} block for sending to an G\+SM modem. \end{DoxyCompactList}\item 
+const char $\ast$ \mbox{\hyperlink{class_p_d_u_ad6bf911bbcf56cd6684be2b7769e13c8}{get\+S\+MS}} ()
+\begin{DoxyCompactList}\small\item\em Get the address of the \mbox{\hyperlink{class_p_d_u}{P\+DU}} message created by {\bfseries{encode\+P\+DU}} \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{class_p_d_u_a9f5b0b80213870ab8d7c80fa82df6c6c}{set\+S\+C\+Anumber}} (const char $\ast$number)
+\begin{DoxyCompactList}\small\item\em Before encoding a \mbox{\hyperlink{class_p_d_u}{P\+DU}}, you must supply the S\+CA phone number. Typically this can be retrieved from a G\+SM modem with the A\+T+\+C\+S\+CA? command. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{class_p_d_u_abdb3f4d36fc93b6dcc2774d35d058673}{decode\+P\+DU}} (const char $\ast$pdu)
+\begin{DoxyCompactList}\small\item\em Decode a \mbox{\hyperlink{class_p_d_u}{P\+DU}}, typically received from a G\+SM modem when in \mbox{\hyperlink{class_p_d_u}{P\+DU}} mode. After a successful decoding you can retrieve the components parts, desctibed below. \end{DoxyCompactList}\item 
+char $\ast$ \mbox{\hyperlink{class_p_d_u_a3ff24c8c8488690165319e246ef2ab8e}{get\+S\+C\+Anumber}} ()
+\begin{DoxyCompactList}\small\item\em Get the S\+CA number from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. \end{DoxyCompactList}\item 
+const char $\ast$ \mbox{\hyperlink{class_p_d_u_a1028661b63660cede9092af9b8a94f0f}{get\+Sender}} ()
+\begin{DoxyCompactList}\small\item\em Get the senders phone number from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. \end{DoxyCompactList}\item 
+const char $\ast$ \mbox{\hyperlink{class_p_d_u_a55ef2d01d56019a9d7d0c7ace1de7a2a}{get\+Time\+Stamp}} ()
+\begin{DoxyCompactList}\small\item\em Get the Timestamp from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. \end{DoxyCompactList}\item 
+const unsigned char $\ast$ \mbox{\hyperlink{class_p_d_u_aa8ad198b5e974d8936916ddbbb4dbe24}{get\+Text}} ()
+\begin{DoxyCompactList}\small\item\em Get the text froma a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\mbox{\hyperlink{class_p_d_u}{P\+DU}} class, provides methods to decode a \mbox{\hyperlink{class_p_d_u}{P\+DU}} message or encode a new one. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em None} & There are no parameters for the constructor \\
+\hline
+\end{DoxyParams}
+
+
+\doxysubsection{Member Function Documentation}
+\mbox{\Hypertarget{class_p_d_u_abdb3f4d36fc93b6dcc2774d35d058673}\label{class_p_d_u_abdb3f4d36fc93b6dcc2774d35d058673}} 
+\index{PDU@{PDU}!decodePDU@{decodePDU}}
+\index{decodePDU@{decodePDU}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{decodePDU()}{decodePDU()}}
+{\footnotesize\ttfamily bool P\+D\+U\+::decode\+P\+DU (\begin{DoxyParamCaption}\item[{const char $\ast$}]{pdu }\end{DoxyParamCaption})}
+
+
+
+Decode a \mbox{\hyperlink{class_p_d_u}{P\+DU}}, typically received from a G\+SM modem when in \mbox{\hyperlink{class_p_d_u}{P\+DU}} mode. After a successful decoding you can retrieve the components parts, desctibed below. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pdu} & A pointer to the \mbox{\hyperlink{class_p_d_u}{P\+DU}} \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true If the decoding succeeded. 
+
+false If the decoding did not succeed. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_a7e797d9408688f727862f7ed10784886}\label{class_p_d_u_a7e797d9408688f727862f7ed10784886}} 
+\index{PDU@{PDU}!encodePDU@{encodePDU}}
+\index{encodePDU@{encodePDU}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{encodePDU()}{encodePDU()}}
+{\footnotesize\ttfamily int P\+D\+U\+::encode\+P\+DU (\begin{DoxyParamCaption}\item[{const char $\ast$}]{recipient,  }\item[{const char $\ast$}]{message }\end{DoxyParamCaption})}
+
+
+
+Encode a \mbox{\hyperlink{class_p_d_u}{P\+DU}} block for sending to an G\+SM modem. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em recipient} & Phone number, must be numeric, no whitespace. International numbers prefixed by \textquotesingle{}+\textquotesingle{} \\
+\hline
+{\em message} & The message in U\+T\+F-\/8 format \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+int The length of the message, need for the G\+SM command {\bfseries{A\+T+\+C\+S\+MG=nn}} 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_a3ff24c8c8488690165319e246ef2ab8e}\label{class_p_d_u_a3ff24c8c8488690165319e246ef2ab8e}} 
+\index{PDU@{PDU}!getSCAnumber@{getSCAnumber}}
+\index{getSCAnumber@{getSCAnumber}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{getSCAnumber()}{getSCAnumber()}}
+{\footnotesize\ttfamily char $\ast$ P\+D\+U\+::get\+S\+C\+Anumber (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the S\+CA number from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. 
+
+\begin{DoxyReturn}{Returns}
+char$\ast$ Pointer to the number 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_a1028661b63660cede9092af9b8a94f0f}\label{class_p_d_u_a1028661b63660cede9092af9b8a94f0f}} 
+\index{PDU@{PDU}!getSender@{getSender}}
+\index{getSender@{getSender}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{getSender()}{getSender()}}
+{\footnotesize\ttfamily const char $\ast$ P\+D\+U\+::get\+Sender (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the senders phone number from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. 
+
+\begin{DoxyReturn}{Returns}
+const char$\ast$ Pointer to the number 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_ad6bf911bbcf56cd6684be2b7769e13c8}\label{class_p_d_u_ad6bf911bbcf56cd6684be2b7769e13c8}} 
+\index{PDU@{PDU}!getSMS@{getSMS}}
+\index{getSMS@{getSMS}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{getSMS()}{getSMS()}}
+{\footnotesize\ttfamily const char $\ast$ P\+D\+U\+::get\+S\+MS (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the address of the \mbox{\hyperlink{class_p_d_u}{P\+DU}} message created by {\bfseries{encode\+P\+DU}} 
+
+\begin{DoxyReturn}{Returns}
+const char$\ast$ The pointer to the message. It already contained the C\+T\+R\+L/Z delimiter byte. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_aa8ad198b5e974d8936916ddbbb4dbe24}\label{class_p_d_u_aa8ad198b5e974d8936916ddbbb4dbe24}} 
+\index{PDU@{PDU}!getText@{getText}}
+\index{getText@{getText}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{getText()}{getText()}}
+{\footnotesize\ttfamily const unsigned char $\ast$ P\+D\+U\+::get\+Text (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the text froma a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. 
+
+\begin{DoxyReturn}{Returns}
+const unsigned char$\ast$ The message in U\+T\+F-\/8 format. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_a55ef2d01d56019a9d7d0c7ace1de7a2a}\label{class_p_d_u_a55ef2d01d56019a9d7d0c7ace1de7a2a}} 
+\index{PDU@{PDU}!getTimeStamp@{getTimeStamp}}
+\index{getTimeStamp@{getTimeStamp}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{getTimeStamp()}{getTimeStamp()}}
+{\footnotesize\ttfamily const char $\ast$ P\+D\+U\+::get\+Time\+Stamp (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Get the Timestamp from a decoded \mbox{\hyperlink{class_p_d_u}{P\+DU}}. 
+
+\begin{DoxyReturn}{Returns}
+const char$\ast$ The tomestamp formatted as Y\+Y\+Y\+M\+M\+D\+D\+H\+H\+M\+M\+SS 
+\end{DoxyReturn}
+\mbox{\Hypertarget{class_p_d_u_a9f5b0b80213870ab8d7c80fa82df6c6c}\label{class_p_d_u_a9f5b0b80213870ab8d7c80fa82df6c6c}} 
+\index{PDU@{PDU}!setSCAnumber@{setSCAnumber}}
+\index{setSCAnumber@{setSCAnumber}!PDU@{PDU}}
+\doxysubsubsection{\texorpdfstring{setSCAnumber()}{setSCAnumber()}}
+{\footnotesize\ttfamily void P\+D\+U\+::set\+S\+C\+Anumber (\begin{DoxyParamCaption}\item[{const char $\ast$}]{number }\end{DoxyParamCaption})}
+
+
+
+Before encoding a \mbox{\hyperlink{class_p_d_u}{P\+DU}}, you must supply the S\+CA phone number. Typically this can be retrieved from a G\+SM modem with the A\+T+\+C\+S\+CA? command. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em number} & The number as retrieved from the A\+T+\+C\+S\+CA? command \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/henryd/\+Documents/\+Platform\+I\+O/\+Projects/pdulib/src/\mbox{\hyperlink{pdulib_8h}{pdulib.\+h}}\item 
+/home/henryd/\+Documents/\+Platform\+I\+O/\+Projects/pdulib/src/pdulib.\+cpp\end{DoxyCompactItemize}

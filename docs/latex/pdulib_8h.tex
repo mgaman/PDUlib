@@ -1,0 +1,154 @@
+\hypertarget{pdulib_8h}{}\doxysection{/home/henryd/\+Documents/\+Platform\+I\+O/\+Projects/pdulib/src/pdulib.h File Reference}
+\label{pdulib_8h}\index{/home/henryd/Documents/PlatformIO/Projects/pdulib/src/pdulib.h@{/home/henryd/Documents/PlatformIO/Projects/pdulib/src/pdulib.h}}
+
+
+Encode/\+Decode \mbox{\hyperlink{class_p_d_u}{P\+DU}} data.  
+
+
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \mbox{\hyperlink{class_p_d_u}{P\+DU}}
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{class_p_d_u}{P\+DU}} class, provides methods to decode a \mbox{\hyperlink{class_p_d_u}{P\+DU}} message or encode a new one. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{pdulib_8h_a8f8ffe1f5e961bcf9f4373d868c923d5}\label{pdulib_8h_a8f8ffe1f5e961bcf9f4373d868c923d5}} 
+\#define {\bfseries B\+I\+T\+M\+A\+S\+K\+\_\+7\+B\+I\+TS}~0x7F
+\item 
+\mbox{\Hypertarget{pdulib_8h_ada472375237528e2a7f4f61d727a6d64}\label{pdulib_8h_ada472375237528e2a7f4f61d727a6d64}} 
+\#define {\bfseries D\+C\+S\+\_\+\+C\+O\+M\+P\+R\+E\+S\+S\+ED}~(5$<$$<$1)
+\item 
+\mbox{\Hypertarget{pdulib_8h_aaeb9919e23e46f82b5af337fb8b995ed}\label{pdulib_8h_aaeb9919e23e46f82b5af337fb8b995ed}} 
+\#define {\bfseries D\+C\+S\+\_\+\+C\+L\+A\+S\+S\+\_\+\+M\+E\+A\+N\+I\+NG}~(4$<$$<$1)
+\item 
+\mbox{\Hypertarget{pdulib_8h_a151d2bd04b8fe050b7092edbb9d03abb}\label{pdulib_8h_a151d2bd04b8fe050b7092edbb9d03abb}} 
+\#define {\bfseries D\+C\+S\+\_\+\+A\+L\+P\+H\+A\+B\+E\+T\+\_\+\+M\+A\+SK}~(3$<$$<$2)
+\item 
+\mbox{\Hypertarget{pdulib_8h_a068d398864dc06c983ee2a2439e76b74}\label{pdulib_8h_a068d398864dc06c983ee2a2439e76b74}} 
+\#define {\bfseries D\+C\+S\+\_\+\+A\+L\+P\+H\+A\+B\+E\+T\+\_\+\+O\+F\+F\+S\+ET}~2
+\item 
+\mbox{\Hypertarget{pdulib_8h_a4b895764e0bad438fecc6d95085ca57d}\label{pdulib_8h_a4b895764e0bad438fecc6d95085ca57d}} 
+\#define {\bfseries D\+C\+S\+\_\+7\+B\+I\+T\+\_\+\+A\+L\+P\+H\+A\+B\+E\+T\+\_\+\+M\+A\+SK}~0\+B0000
+\item 
+\mbox{\Hypertarget{pdulib_8h_ae2cfc1d9924465ecb9c63c89ff9a911f}\label{pdulib_8h_ae2cfc1d9924465ecb9c63c89ff9a911f}} 
+\#define {\bfseries D\+C\+S\+\_\+8\+B\+I\+T\+\_\+\+A\+L\+P\+H\+A\+B\+E\+T\+\_\+\+M\+A\+SK}~0\+B0100
+\item 
+\mbox{\Hypertarget{pdulib_8h_aab09f5c2d76d57d9241ac506207cd54f}\label{pdulib_8h_aab09f5c2d76d57d9241ac506207cd54f}} 
+\#define {\bfseries D\+C\+S\+\_\+16\+B\+I\+T\+\_\+\+A\+L\+P\+H\+A\+B\+E\+T\+\_\+\+M\+A\+SK}~0\+B1000
+\item 
+\mbox{\Hypertarget{pdulib_8h_a945f30718c5ae551efd8dbcda253d2bc}\label{pdulib_8h_a945f30718c5ae551efd8dbcda253d2bc}} 
+\#define {\bfseries D\+C\+S\+\_\+\+C\+L\+A\+S\+S\+\_\+\+M\+A\+SK}~3
+\item 
+\mbox{\Hypertarget{pdulib_8h_a92fb6b31eab1e3d3472da920d746c2b4}\label{pdulib_8h_a92fb6b31eab1e3d3472da920d746c2b4}} 
+\#define {\bfseries D\+C\+S\+\_\+\+I\+M\+M\+E\+D\+I\+A\+T\+E\+\_\+\+D\+I\+S\+P\+L\+AY}~3
+\item 
+\mbox{\Hypertarget{pdulib_8h_a525e7f189ebf396207886f4821c11567}\label{pdulib_8h_a525e7f189ebf396207886f4821c11567}} 
+\#define {\bfseries D\+C\+S\+\_\+\+M\+E\+\_\+\+S\+P\+E\+C\+I\+F\+I\+C\+\_\+\+M\+A\+SK}~1
+\item 
+\mbox{\Hypertarget{pdulib_8h_ac48c9219ec30d95bc127ed572b535676}\label{pdulib_8h_ac48c9219ec30d95bc127ed572b535676}} 
+\#define {\bfseries D\+C\+S\+\_\+\+S\+I\+M\+\_\+\+S\+P\+E\+C\+I\+F\+I\+C\+\_\+\+M\+A\+SK}~2
+\item 
+\mbox{\Hypertarget{pdulib_8h_aea37168091244c5bca717aba1311eced}\label{pdulib_8h_aea37168091244c5bca717aba1311eced}} 
+\#define {\bfseries D\+C\+S\+\_\+\+T\+E\+\_\+\+S\+P\+E\+C\+I\+F\+I\+C\+\_\+\+M\+A\+SK}~3
+\item 
+\mbox{\Hypertarget{pdulib_8h_afdee54f172efa7228638431784fa29c9}\label{pdulib_8h_afdee54f172efa7228638431784fa29c9}} 
+\#define {\bfseries P\+D\+U\+\_\+\+V\+A\+L\+I\+D\+I\+T\+Y\+\_\+\+M\+A\+S\+K\+\_\+\+O\+F\+F\+S\+ET}~3
+\item 
+\mbox{\Hypertarget{pdulib_8h_a29a712431a1ed5a88e759008da894ef7}\label{pdulib_8h_a29a712431a1ed5a88e759008da894ef7}} 
+\#define {\bfseries P\+D\+U\+\_\+\+V\+A\+L\+I\+D\+I\+T\+Y\+\_\+\+N\+O\+T\+\_\+\+P\+R\+E\+S\+E\+NT}~0
+\item 
+\mbox{\Hypertarget{pdulib_8h_aff9759998206dc7db41f27b9b5fc0a0c}\label{pdulib_8h_aff9759998206dc7db41f27b9b5fc0a0c}} 
+\#define {\bfseries P\+D\+U\+\_\+\+V\+A\+L\+I\+D\+I\+T\+Y\+\_\+\+P\+R\+E\+S\+E\+N\+T\+\_\+\+R\+E\+L\+A\+T\+I\+VE}~2
+\item 
+\mbox{\Hypertarget{pdulib_8h_a12b7f51366638e7efbb4f02bcbdf9ccd}\label{pdulib_8h_a12b7f51366638e7efbb4f02bcbdf9ccd}} 
+\#define {\bfseries P\+D\+U\+\_\+\+V\+A\+L\+I\+D\+I\+T\+Y\+\_\+\+P\+R\+E\+S\+E\+N\+T\+\_\+\+E\+N\+H\+A\+N\+C\+ED}~1
+\item 
+\mbox{\Hypertarget{pdulib_8h_a4f6071f15f3dcb1ae107657ef7aa40d7}\label{pdulib_8h_a4f6071f15f3dcb1ae107657ef7aa40d7}} 
+\#define {\bfseries P\+D\+U\+\_\+\+V\+A\+L\+I\+D\+I\+T\+Y\+\_\+\+P\+R\+E\+S\+E\+N\+T\+\_\+\+A\+B\+S\+O\+L\+U\+TE}~3
+\item 
+\mbox{\Hypertarget{pdulib_8h_ad366367636b6534f5e6243ea7b163b6f}\label{pdulib_8h_ad366367636b6534f5e6243ea7b163b6f}} 
+\#define {\bfseries P\+S\+U\+\_\+\+S\+M\+S\+\_\+\+D\+E\+L\+I\+V\+ER}~0
+\item 
+\mbox{\Hypertarget{pdulib_8h_affd01c8a207312c3932488f1c4465834}\label{pdulib_8h_affd01c8a207312c3932488f1c4465834}} 
+\#define {\bfseries P\+S\+U\+\_\+\+S\+M\+S\+\_\+\+S\+U\+B\+M\+IT}~1
+\item 
+\mbox{\Hypertarget{pdulib_8h_a752361257aa076ada9560d6e43db4227}\label{pdulib_8h_a752361257aa076ada9560d6e43db4227}} 
+\#define {\bfseries I\+N\+T\+E\+R\+N\+A\+T\+I\+O\+N\+A\+L\+\_\+\+N\+U\+M\+B\+ER}~0x91
+\item 
+\mbox{\Hypertarget{pdulib_8h_a8feeac870e492568bf8f44254ec58851}\label{pdulib_8h_a8feeac870e492568bf8f44254ec58851}} 
+\#define {\bfseries N\+A\+T\+I\+O\+N\+A\+L\+\_\+\+N\+U\+M\+B\+ER}~0x\+A1
+\item 
+\mbox{\Hypertarget{pdulib_8h_abc8729ce9d08fa17146b06a6462c13e2}\label{pdulib_8h_abc8729ce9d08fa17146b06a6462c13e2}} 
+\#define {\bfseries E\+X\+T\+\_\+\+M\+A\+SK}~0x80
+\item 
+\mbox{\Hypertarget{pdulib_8h_aa8c21e4ab5ff4f66731b9602688c64a2}\label{pdulib_8h_aa8c21e4ab5ff4f66731b9602688c64a2}} 
+\#define {\bfseries T\+O\+N\+\_\+\+M\+A\+SK}~0x70
+\item 
+\mbox{\Hypertarget{pdulib_8h_afec788fa0cbad285d1fba2f050f29826}\label{pdulib_8h_afec788fa0cbad285d1fba2f050f29826}} 
+\#define {\bfseries T\+O\+N\+\_\+\+O\+F\+F\+S\+ET}~4
+\item 
+\mbox{\Hypertarget{pdulib_8h_a09d96194d01d371b0423b2fabaddb2f0}\label{pdulib_8h_a09d96194d01d371b0423b2fabaddb2f0}} 
+\#define {\bfseries N\+P\+I\+\_\+\+M\+A\+SK}~0x0f
+\item 
+\mbox{\Hypertarget{pdulib_8h_ae2c92e2f8cbc5154d64dd1d479af3dee}\label{pdulib_8h_ae2c92e2f8cbc5154d64dd1d479af3dee}} 
+\#define {\bfseries M\+A\+X\+\_\+\+S\+M\+S\+\_\+\+L\+E\+N\+G\+T\+H\+\_\+7\+B\+IT}~160
+\item 
+\mbox{\Hypertarget{pdulib_8h_accb4978709fc9843ce70e4b72bf7d509}\label{pdulib_8h_accb4978709fc9843ce70e4b72bf7d509}} 
+\#define {\bfseries M\+A\+X\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+\+L\+E\+N\+G\+TH}~20
+\item 
+\mbox{\Hypertarget{pdulib_8h_abfb7186bd8a75324c89d8dfa64286650}\label{pdulib_8h_abfb7186bd8a75324c89d8dfa64286650}} 
+\#define {\bfseries P\+D\+U\+\_\+\+B\+I\+N\+A\+R\+Y\+\_\+\+M\+A\+X\+\_\+\+L\+E\+N\+G\+TH}~170
+\item 
+\mbox{\Hypertarget{pdulib_8h_aeff54d2f946ba65b1d6513f90d789d23}\label{pdulib_8h_aeff54d2f946ba65b1d6513f90d789d23}} 
+\#define {\bfseries N\+P\+C7}~63
+\item 
+\mbox{\Hypertarget{pdulib_8h_ad56931728c5ca087da00948c7f56e27d}\label{pdulib_8h_ad56931728c5ca087da00948c7f56e27d}} 
+\#define {\bfseries N\+P\+C8}~\textquotesingle{}?\textquotesingle{}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{pdulib_8h_a95b901eeb84e0cadf5b4f18bbaa4e8ac}\label{pdulib_8h_a95b901eeb84e0cadf5b4f18bbaa4e8ac}} 
+enum {\bfseries e\+D\+CS} \{ {\bfseries A\+L\+P\+H\+A\+B\+E\+T\+\_\+7\+B\+IT}, 
+{\bfseries A\+L\+P\+H\+A\+B\+E\+T\+\_\+8\+B\+IT}, 
+{\bfseries A\+L\+P\+H\+A\+B\+E\+T\+\_\+16\+B\+IT}
+ \}
+\item 
+\mbox{\Hypertarget{pdulib_8h_adb3664ac344906488e8cee0cac46ddde}\label{pdulib_8h_adb3664ac344906488e8cee0cac46ddde}} 
+enum {\bfseries e\+Address\+Type} \{ {\bfseries I\+N\+T\+E\+R\+N\+A\+T\+I\+O\+N\+A\+L\+\_\+\+N\+U\+M\+E\+R\+IC}, 
+{\bfseries N\+A\+T\+I\+O\+N\+A\+L\+\_\+\+N\+U\+M\+E\+R\+IC}, 
+{\bfseries A\+L\+P\+H\+A\+B\+E\+T\+IC}
+ \}
+\item 
+\mbox{\Hypertarget{pdulib_8h_ad418f95efe919ec8b39a6dc339646a49}\label{pdulib_8h_ad418f95efe919ec8b39a6dc339646a49}} 
+enum {\bfseries e\+Length\+Type} \{ {\bfseries O\+C\+T\+E\+TS}, 
+{\bfseries N\+I\+B\+B\+L\+ES}
+ \}
+\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{pdulib_8h_ab97da1604581bf9146945eb0e4957505}\label{pdulib_8h_ab97da1604581bf9146945eb0e4957505}} 
+const int16\+\_\+t {\bfseries lookup\+\_\+ascii8to7} \mbox{[}$\,$\mbox{]}
+\item 
+\mbox{\Hypertarget{pdulib_8h_a800d0160530dfc8956b8be65a641818c}\label{pdulib_8h_a800d0160530dfc8956b8be65a641818c}} 
+const uint8\+\_\+t {\bfseries lookup\+\_\+ascii7to8} \mbox{[}$\,$\mbox{]}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Encode/\+Decode \mbox{\hyperlink{class_p_d_u}{P\+DU}} data. 
+
+\begin{DoxyAuthor}{Author}
+David Henry (\href{mailto:mgadriver@gmail.com}{\texttt{ mgadriver@gmail.\+com}}) 
+\end{DoxyAuthor}
+\begin{DoxyVersion}{Version}
+0.\+1 
+\end{DoxyVersion}
+\begin{DoxyDate}{Date}
+2021-\/09-\/23
+\end{DoxyDate}
+\begin{DoxyCopyright}{Copyright}
+Copyright (c) 2021 @ 
+\end{DoxyCopyright}

@@ -8,6 +8,8 @@ Both the GSM 7 bit alphabet and UCS-2 16 bit alphabets are supported which means
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
 ## Work in progress
 Incoming messages with an Alphabetic origin field are not yet supported. I do not yet have an example for debugging.
+## Web based documentation
+Can be read [Here](./docs/html/index.html)
 # API
 ## decodePDU
 **bool decodePDU(const char *pdu)**<br>

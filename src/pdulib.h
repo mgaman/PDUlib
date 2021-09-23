@@ -61,7 +61,7 @@ enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
 /**
  * @brief PDU class, provides methods to decode a PDU message or encode a new one
- * @param None There are not parameters for the constructor
+ * @param None There are no parameters for the constructor
  * 
  */
 class PDU

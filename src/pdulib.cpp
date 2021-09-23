@@ -1,7 +1,7 @@
 
+#include <stdint-gcc.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdint-gcc.h>
 #include <math.h>
 #include "pdulib.h"
 
