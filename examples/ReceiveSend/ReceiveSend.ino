@@ -25,30 +25,26 @@ void setup() {
   Serial.begin(115200);
   GSM.begin(9600);
   mypdu.decodePDU("07917952140230F2040C9179525419896800001280018153832106D17B594ECF03");
-//  const char *sca = mypdu.getSCAnumber();
-  const char *sca = "+97254120032";
   Serial.println();
-  mypdu.setSCAnumber(sca);
   Serial.println(mypdu.getSender());
   Serial.println(mypdu.getTimeStamp());
   Serial.println(mypdu.getText());
-  //mypdu.setDebug(true);
+  GSM.print("AT+CSCA?\r");   // will print your networks SCA number, put it into the next line
+  mypdu.setSCAnumber( "+***********");
   // write your message and recipient number here
-//  int len = mypdu.encodePDU("0545919886","Hello",ALPHABET_7BIT);
-//  int len = mypdu.encodePDU("+972545919886","Hello",ALPHABET_7BIT);
-//  int len = mypdu.encodePDU("+972545919886","שלום",ALPHABET_16BIT);
-//  int len = mypdu.encodePDU("0545919886","שלום",ALPHABET_16BIT);
-  int len = mypdu.encodePDU("0545919886","אabcdefghijklmnopqrstuvwxyz");
- // int len = mypdu.encodePDU("0545919886","אabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQERSTUVWXYZ01234567890.,;'/[]",ALPHABET_16BIT);
+//  int len = mypdu.encodePDU("**********","Hello");   // all ascii, national number
+//  int len = mypdu.encodePDU("+**********","Hello");  // all ascii, international number
+//  int len = mypdu.encodePDU("**********","שלום");    // 16 bit character, national number
+  int len = mypdu.encodePDU("+************","שלום");     // 16 bit character, international number
   Serial.print(F("SMS length "));Serial.println(len);
   Serial.println(mypdu.getSMS());
-  sprintf(temp,"AT+CMGS=%d\r",len);
+  sprintf(temp,"AT+CMGS=%d\r",len);  // generate SMS submit command
   Serial.println(temp);
-  GSM.print(F("AT+CMGF=0\r"));
+  GSM.print(F("AT+CMGF=0\r"));   // ensure we are in PDU mode
   delay(1000);
-  GSM.print(temp);
-  delay(1000);
-  GSM.print(mypdu.getSMS());
+  GSM.print(temp);               // issue SMS submit command
+  delay(1000);                   // wait for > prompt to pass
+  GSM.print(mypdu.getSMS());     // send the message
 }
 
 void loop() {
