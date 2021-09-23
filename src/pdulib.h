@@ -9,8 +9,11 @@
  * @
  */
 
+
 #ifdef PDU_LIB_INCLUDE
 #else
+//#define PM
+
 #define PDU_LIB_INCLUDE
 #define BITMASK_7BITS 0x7F
 
@@ -124,7 +127,7 @@ public:
    * 
    * @return const unsigned char* The message in UTF-8 format.
    */
-  const unsigned char *getText();
+  const char *getText();
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -132,7 +135,7 @@ private:
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
   int meslength;
-  unsigned char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
+  char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
   int tslength;
   char tsbuff[20];    // big enough for timestamp
   char scanumber[MAX_NUMBER_LENGTH];
@@ -151,14 +154,14 @@ private:
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
 
   int convert_ascii_to_7bit(const char *ascii, char *a7bit);
-  int convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii);
+  int convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii);
 
-  uint8_t gethex(const char *pc);
+  unsigned char gethex(const char *pc);
   void putHex(unsigned char b, char *target);
   // return number of ucs2 octets in output array
-  int pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2);
+  int pdu_to_ucs2(const char *pdu, int length, unsigned short *ucs2);
   // callers responsibilty that utf8 array is big enough
-  int ucs2_to_utf8(unsigned short ucs2, unsigned char *utf8);
+  int ucs2_to_utf8(unsigned short ucs2, char *utf8);
   // callers responsibilty that ucs2 array is big enough
   int utf8_to_ucs2_single(const char *utf8, short *ucs2);  // translate to a single uds2
   int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
@@ -187,7 +190,7 @@ const
 #ifdef PM
       PROGMEM
 #endif
-int16_t lookup_ascii8to7[] = {
+short lookup_ascii8to7[] = {
   NPC7,       /*     0      null [NUL]                              */
   NPC7,       /*     1      start of heading [SOH]                  */
   NPC7,       /*     2      start of text [STX]                     */
@@ -461,7 +464,7 @@ const
 #ifdef PM
       PROGMEM
 #endif
-        uint8_t lookup_ascii7to8[] = {
+        unsigned char lookup_ascii7to8[] = {
   64,         /*  0      @  COMMERCIAL AT                           */
   163,        /*  1      £  POUND SIGN                              */
   36,         /*  2      $  DOLLAR SIGN                             */

@@ -1,8 +1,22 @@
+/**
+ * @file pdulib.cpp
+ * @author David Henry (mgadriver@gmail.com)
+ * @brief A general purpose libray for dencoding/decoding PDU data for GSM modems
+ * @version 0.1
+ * @date 2021-09-23
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 
-#include <stdint-gcc.h>
-#include <string.h>
-#include <ctype.h>
+//#define ARDUINO_BASE   // uncomment for Arduino
+#ifdef ARDUINO_BASE
+#include <Arduino.h>     
+#else
 #include <math.h>
+#include <string.h>
+#endif
+#include <ctype.h>
 #include "pdulib.h"
 
 //#define DIRECT
@@ -103,15 +117,15 @@ int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
     //    Serial.print("lu: " );
     //    Serial.println(lu,HEX);
 #ifdef PM
-    if (pgm_read_word_near(lookup_ascii8to7 + (uint8_t)ascii[r])<256)
+    if (pgm_read_word_near(lookup_ascii8to7 + (unsigned char)ascii[r])<256)
 #else
-    if (lookup_ascii8to7[(uint8_t)ascii[r]]<256)
+    if (lookup_ascii8to7[(unsigned char)ascii[r]]<256)
 #endif
     {
 #ifdef PM
-      int16_t x = (int16_t)pgm_read_word_near(lookup_ascii8to7 + (uint8_t)ascii[r]);
+      short x = (short)pgm_read_word_near(lookup_ascii8to7 + (unsigned char)ascii[r]);
 #else
-      int16_t x = (int16_t)lookup_ascii8to7[(uint8_t)ascii[r]];
+      short x = lookup_ascii8to7[(unsigned char)ascii[r]];
 #endif
       a7bit[w++] = abs(x);
     }
@@ -119,9 +133,9 @@ int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
     {
       a7bit[w++] = 27;
 #ifdef PM
-      a7bit[w++] = pgm_read_word_near(lookup_ascii8to7 + (uint8_t)ascii[r]) - 256;
+      a7bit[w++] = pgm_read_word_near(lookup_ascii8to7 + (unsigned char)ascii[r]) - 256;
 #else
-      a7bit[w++] = lookup_ascii8to7[(uint8_t)ascii[r]] - 256;
+      a7bit[w++] = lookup_ascii8to7[(unsigned char)ascii[r]] - 256;
 #endif
     }
     r++;
@@ -219,14 +233,14 @@ unsigned char PDU::gethex(const char *pc)
 {
   int i;
   if (isdigit(*pc))
-    i = (uint8_t(*pc) - '0') * 16;
+    i = ((unsigned char)(*pc) - '0') * 16;
   else
-    i = (uint8_t(*pc) - 'A' + 10) * 16;
+    i = ((unsigned char)(*pc) - 'A' + 10) * 16;
   pc++;
   if (isdigit(*pc))
-    i += (uint8_t(*pc) - '0');
+    i += (unsigned char)(*pc) - '0';
   else
-    i += (uint8_t(*pc) - 'A' + 10);
+    i += (unsigned char)(*pc) - 'A' + 10;
   return i;
 }
 
@@ -246,8 +260,8 @@ void PDU::putHex(unsigned char b, char *target) {
 /*
     length is in octets, output buffer ucs2 must be big enough to receive the results
 */
-int PDU::pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2) {
-  uint16_t temp;
+int PDU::pdu_to_ucs2(const char *pdu, int length, unsigned short *ucs2) {
+  unsigned short temp;
   int indexOut = 0;
   int octet = 0;
   unsigned char X;
@@ -267,7 +281,7 @@ int PDU::pdu_to_ucs2(const char *pdu, int length, uint16_t *ucs2) {
 }
 
 
-int PDU::convert_7bit_to_ascii(uint8_t *a7bit, int length, char *ascii) {
+int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
   int     r;
   int     w;
 
@@ -345,7 +359,7 @@ int PDU::pdu_to_ascii(const char *pdu, int pdulength, char *ascii) {
       ovflow++;
     }
     else {
-      ascii7bit[w++] = ((uint8_t)(gethex(&pdu[index]) << (r % 7)) | (uint8_t)(gethex(&pdu[index - 2]) >> (7 + 1 - (r % 7)))) & 0x7F;
+      ascii7bit[w++] = ((gethex(&pdu[index]) << (r % 7)) | (gethex(&pdu[index - 2]) >> (7 + 1 - (r % 7)))) & 0x7F;
     }
   }
 
@@ -433,7 +447,7 @@ bool PDU::decodePDU(const char *pdu){
 #define BIT7ON6OFF  0B10000000
 #define BITS0TO5ON  0B00111111
 
-int PDU::ucs2_to_utf8(unsigned short ucs2, unsigned char *outbuf)
+int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
 {
     if (/*ucs2>=0 and*/ ucs2 <= 0x7f)  // 7F(16) = 127(10)
     {
@@ -547,13 +561,13 @@ const char *PDU::getSender() {
 const char *PDU::getTimeStamp() {
   return tsbuff;
 }
-const unsigned char *PDU::getText() {
+const char *PDU::getText() {
   return mesbuff;
 }
 
 
 void PDU::BCDtoString(char *output, const char *input,int length) {
-  uint8_t X;
+  unsigned char X;
   for (int i = 0; i < length; i += 2)
   {
     X = gethex(input);
