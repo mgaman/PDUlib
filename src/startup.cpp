@@ -10,7 +10,7 @@ extern std::queue<std::string> inputQueue;
     Initialization of modem where we send a command and expect a response
     usually OK within a set time
 */
-#define DEFAULT_APN "******"
+#define DEFAULT_APN "uinternet"
 
 const char *atcommands[] = {
     "ATE1\r"
@@ -66,7 +66,7 @@ void startup(int sp) {
                 case 1 ... LAST_CASE:
                     if (response.compare(0,2,"OK") == 0 || response.compare(0,5,"ERROR")== 0) {
                          //   vTaskDelay(5000/portTICK_PERIOD_MS);
-                            sleep(5); 
+                            sleep(1); 
                             write(sp,atcommands[atindex++],strlen(atcommands[atindex]));  // rest of commands
                             stage++;
                         }

@@ -7,7 +7,7 @@
 #include "pdulib.h"
 
 std::string menu = "Menu\n" "  s send sms\n";
-void sendSMS(int sp);
+void sendSMS(int sp,int i);
 void consoleHandler(int sp) {
     char linein[10];
     std::cout << "Console handler starting\n";
@@ -15,7 +15,10 @@ void consoleHandler(int sp) {
         std::cin.getline(linein,sizeof(linein));
         switch (linein[0]) {
             case 's':
-                sendSMS(sp);
+                sendSMS(sp,0);
+                break;
+            case 'S':
+                sendSMS(sp,1);
                 break;
             default:
                 std::cout << menu;
@@ -25,12 +28,14 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *from = "**********";
-//const char *message = "hello there";
-const char *message = "שלום";
+const char *to = "+972545919886";
+const char *message[] = {
+  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234" };
+
 char writeBuf[50];   // general purpose
-void sendSMS(int sp) {
-  int len = mypdu.encodePDU(from,INTERNATIONAL_NUMERIC,message,ALPHABET_16BIT);
+void sendSMS(int sp, int i) {
+  int len = mypdu.encodePDU(to,message[i]);
   int buflen = strlen(mypdu.getSMS());
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));

@@ -7,7 +7,7 @@
 #include "pdulib.h"
 
 extern std::queue<std::string> inputQueue;
-PDU mypdu = PDU();
+extern PDU mypdu;
 
 std::string cgregstates[] = {
     "not registered",

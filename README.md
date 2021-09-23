@@ -28,12 +28,10 @@ Returns the timestamp of the message in the format YYMMDDHHMMSS<br>
 **const char *getText()**<br>
 Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.<br>
 ## encodePDU
-**int encodePDU(const char *recipient, eAddressType,const char *message, eDCS dcs)**<br>
-1. recipient. The phone number of the recipient. It must conform to the E-164 format i.e. numeric only, no embedded white space. An international number may, or may not be preceded by '+'.
-2. addressType. Must be either INTERNATIONAL_NUMERIC or NATIONAL_NUMERIC. In the case of INTERNATIONAL_NUMERIC preceding '+' in the recipient field can be implicit or explicit.
-3. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver.
-4. dcs. Data coding scheme. Must be ALPHABET_7BIT or ALPHABET_16BIT. If the message contains only characters in 7 bit ASCII, choose ALPHABET_7BIT, else choose ALPHABET_16BIT. Note that the presence of even just 1 not ASCII 7 bit makes the whole message ALPHABET_16BIT.
-4. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
+**int encodePDU(const char *recipient,const char *message)**<br>
+1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
+2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all 7 bit ASCII, or not. If all 7 bit ASCII then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
+3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
 ## setSCAnumber
 **void setSCAnumber(const char *)**<br>
 Before one can encode an PDU the number of the Service Centre must be known.  
@@ -65,17 +63,14 @@ int main(int argc,char *argv[]) {
     --> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
     mypdu.setSCAnumber("nnnnnn");  
     // create an SMS buffer  
-    int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"hi there",ALPHABET_7BIT);  
+    //int len = myPDU.encodePDU("+12121234567","שלום");  
+    int len = myPDU.encodePDU("+12121234567","hi there");  
     char temp[20];  
     sprintf(temp,"AT+CMGS=%d\r",len); // create the command 
     write(sp,temp,strlen(temp));    // write command to modem  
     sleep(1);   // wait for > response to pass  
     write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
 }  
-```
-If you wanted to send something not ASCII the encodePDU line would look like
-```
-int len = myPDU.encodePDU("+12121234567",INTERNATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);  
 ```
 ### Typical Usage Receiving an SMS
 Assuming the data
@@ -126,20 +121,19 @@ void setup() {
   Serial.println(mypdu.getSender());
   Serial.println(mypdu.getTimeStamp());
   Serial.println(mypdu.getText());
+  GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
+  delay(1000);
   // write your message and recipient number here
-//  int len = mypdu.encodePDU("+***********",INTERNATIONAL_NUMERIC,"Hello",ALPHABET_7BIT);
-//  int len = mypdu.encodePDU("***********",NATIONAL_NUMERIC,"Hello",ALPHABET_7BIT);
-//  int len = mypdu.encodePDU("+***********",INTERNATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);
-  int len = mypdu.encodePDU("***********",NATIONAL_NUMERIC,"שלום",ALPHABET_16BIT);
+//  int len = mypdu.encodePDU("+***********","Hello"); // international number, ascii 7 bit
+//  int len = mypdu.encodePDU("***********","Hello");  // national number, ascii 7 bit
+//  int len = mypdu.encodePDU("+***********",,"שלום",); // international number, CSU-2
+  int len = mypdu.encodePDU("***********","שלום");      // national number, CSU-2
   Serial.print("SMS length ");Serial.println(len);
   Serial.println(mypdu.getSMS());
-  sprintf(temp,"AT+CMGS=%d\r",len);
-  Serial.println(temp);
-  GSM.print("AT+CMGF=0\r");
-  delay(1000);
-  GSM.print(temp);
-  delay(1000);
-  GSM.print(mypdu.getSMS());
+  sprintf(temp,"AT+CMGS=%d\r",len); // create SMS submit command
+  GSM.print(temp);           // issue SMS submit command
+  delay(1000);               // wait for > prompt to pass
+  GSM.print(mypdu.getSMS()); // send the message
 }
 
 void loop() {

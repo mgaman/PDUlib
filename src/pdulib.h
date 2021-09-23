@@ -1,11 +1,17 @@
-//#define PM
-#include <string>
-/*
-  A library for encoding/decoding PDU strings
-  Currently only ASCII 7-bit supported
+/**
+ * @file pdulib.h
+ * @author David Henry (mgadriver@gmail.com)
+ * @brief Encode/Decode PDU data 
+ * @version 0.1
+ * @date 2021-09-23
+ * 
+ * @copyright Copyright (c) 2021
+ * @
+ */
 
-  encodePDU returns the length of the PDU byte buffer, if any error the length reported as -1
-*/
+#ifdef PDU_LIB_INCLUDE
+#else
+#define PDU_LIB_INCLUDE
 #define BITMASK_7BITS 0x7F
 
 // DCS bit masks
@@ -41,7 +47,10 @@
 #define NPI_MASK 0x0f   // bits 0-3
 
 #define MAX_SMS_LENGTH_7BIT 160 // GSM 3.4
-#define MAX_NUMBER_LENGTH 30    // gets packed into BCD or packed 7 bit
+#define MAX_NUMBER_LENGTH 20    // gets packed into BCD or packed 7 bit
+
+//SCA (12) + type + mref + address(12) + pid + dcs + length + data(140) -- no valtime
+#define PDU_BINARY_MAX_LENGTH 170
 
  /* Define Non-Printable Characters as a question mark */
 #define NPC7    63
@@ -50,23 +59,72 @@
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
 enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
-
+/**
+ * @brief PDU class, provides methods to decode a PDU message or encode a new one
+ * @param None There are not parameters for the constructor
+ * 
+ */
 class PDU
 {
 public:
   PDU();
   ~PDU();
-  // stuff when sending a message
-  int encodePDU(const char *recipient, eAddressType,const char *message, eDCS dcs);
+/**
+ * @brief Encode a PDU block for sending to an GSM modem
+ * 
+ * @param recipient Phone number, must be numeric, no whitespace. International numbers prefixed by '+'
+ * @param message The message in UTF-8 format
+ * @return int The length of the message, need for the GSM command <b>AT+CSMG=nn</b>
+ */
+  int encodePDU(const char *recipient,const char *message);
+  /**
+   * @brief Get the address of the PDU message created by <b>encodePDU</b>
+   * 
+   * @return const char* The pointer to the message. It already contained the CTRL/Z delimiter byte.
+   */
   const char *getSMS();
-  // stuff when receiving a message
+/**
+ * @brief Before encoding a PDU, you must supply the SCA phone number.
+ * Typically this can be retrieved from a GSM modem with the AT+CSCA? command.
+ * 
+ * @param number The number as retrieved from the AT+CSCA? command
+ * 
+ */
+  void setSCAnumber(const char *number);
+  /**
+   * @brief Decode a PDU, typically received from a GSM modem when in PDU mode.
+   * After a successful decoding you can retrieve the components parts, desctibed below.
+   * 
+   * @param pdu A pointer to the PDU
+   * @return true If the decoding succeeded.
+   * @return false If the decoding did not succeed.
+   */
   bool decodePDU(const char *pdu);
   //const char *getSCA();
+  /**
+   * @brief Get the SCA number from a decoded PDU
+   * 
+   * @return char* Pointer to the number
+   */
   char *getSCAnumber();
+  /**
+   * @brief Get the senders phone number from a decoded PDU
+   * 
+   * @return const char* Pointer to the number
+   */
   const char *getSender();
+  /**
+   * @brief Get the Timestamp from a decoded PDU
+   * 
+   * @return const char* The tomestamp formatted as YYYMMDDHHMMSS
+   */
   const char *getTimeStamp();
+  /**
+   * @brief Get the text froma a decoded PDU.
+   * 
+   * @return const unsigned char* The message in UTF-8 format.
+   */
   const unsigned char *getText();
-  void setSCAnumber(const char *);
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -81,14 +139,14 @@ private:
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
-  char smsSubmit[360];  // big enough for largest message
+  char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
   // helper methods
-  bool setAddress(const char *,eAddressType,eLengthType);
   //bool setMessage(const char *message,eDCS);
 
   void stringToBCD(const char *number, char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
-
+  void digitSwap(const char *number, char *pdu);
+  
   int ascii_to_pdu(const char *ascii, char *pdu);
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
 
@@ -107,6 +165,7 @@ private:
   // get length of next utf8
   int utf8Length(const char *);
   bool decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
+  bool setAddress(const char *,eAddressType,eLengthType);
 };
 
 /****************************************************************************
@@ -546,3 +605,4 @@ const
         124            27 64   |  VERTICAL BAR                             */
 
 };
+#endif

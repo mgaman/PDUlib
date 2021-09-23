@@ -13,6 +13,7 @@
 #include <errno.h> // Error integer and strerror() function
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h> // write(), read(), close()
+#include "pdulib.h"
 
 int serial_port;
 //static char read_buf [256];
@@ -33,6 +34,8 @@ void consoleHandler(int sp);
 // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
 // must have been initialized with a call to tcgetattr() overwise behaviour
 // is undefined
+PDU mypdu = PDU();
+//char Temp[20];
 
 // Check for errors
 int main(int argc, char *argv[]) {
@@ -40,6 +43,20 @@ int main(int argc, char *argv[]) {
         std::cout <<"Usage: pduapp serial_port\n\n";
         return 1;
     }
+
+#if 0
+    char *number1 = "0545919886";  // even number of digits
+    char *number2 = "97254591988";  // odd number of digits
+    mypdu.addressLength = strlen(number1);
+//    mypdu.digitSwap(number1,Temp);
+    mypdu.setAddress(number1,NATIONAL_NUMERIC,NIBBLES);
+    mypdu.setAddress(number1,NATIONAL_NUMERIC,OCTETS);
+    mypdu.addressLength = strlen(number2);
+//    mypdu.digitSwap(number2,Temp);
+    mypdu.setAddress(number2,NATIONAL_NUMERIC,NIBBLES);
+    mypdu.setAddress(number2,NATIONAL_NUMERIC,OCTETS);
+#endif
+
     std::cout << argv[1] << std::endl; 
     serial_port = open(argv[1], O_RDWR);
     if (serial_port < 0) 

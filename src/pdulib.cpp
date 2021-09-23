@@ -1,23 +1,14 @@
 
-//#include <Arduino.h>
-#include <iostream>
 #include <string.h>
-//#include <stdio.h>
 #include <ctype.h>
 #include <stdint-gcc.h>
 #include <math.h>
 #include "pdulib.h"
-//#define PM  // forces tables into PROGMEM
 
-PDU::PDU()
-{
-  // initialize all local variables
- // scavalid = recvalid = mesvalid = false;
- // csvalid = false;
- // dcs = ALPHABET_16BIT;
-}
+//#define DIRECT
 
-PDU::~PDU() {}
+PDU::PDU(){}
+PDU::~PDU(){}
 
 /*
   Save recipient phone number, check that it is numeric
@@ -28,9 +19,9 @@ PDU::~PDU() {}
 bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
 {
   bool rc = false;
-  addressLength = strlen(address);
   if (*address == '+')
-    addressLength--;  // ignore leading +
+    address++;  // ignore leading +
+  addressLength = strlen(address);
   if ( addressLength < MAX_NUMBER_LENGTH)
   {
     if (lt==NIBBLES)
@@ -48,10 +39,6 @@ bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
         stringToBCD(address,&smsSubmit[smsOffset]);
         smsOffset += (strlen(address)+1)/2;
         break;
-      case ALPHABETIC:
-        smsSubmit[smsOffset++] = 0xD0;
-        ascii_to_pdu(address,&smsSubmit[smsOffset]);
-        break;
       default:
         return rc;
     }
@@ -60,15 +47,7 @@ bool PDU::setAddress(const char *address,eAddressType at,eLengthType lt)
   return rc;
 }
 
-#if 0
-bool PDU::setMessage(const char *mes,eDCS dcs)
-{
-  bool rc = false;
- // mesvalid = rc;
-  return rc;
-}
-#endif
-
+// convert 2 printable digits to 1 BCD byte
 void PDU::stringToBCD(const char *number, char *pdu)
 {
   int j, targetindex=0;
@@ -90,6 +69,27 @@ void PDU::stringToBCD(const char *number, char *pdu)
       pdu[targetindex] += *number++ - '0';
     }
   }
+}
+
+void PDU::digitSwap(const char *number, char *pdu) {
+  int j, targetindex=0;
+  if (*number == '+')  // ignore leading +
+    number++;
+  for (j = 0; j < addressLength; j++) {
+    if ((j & 1) == 1) // odd, upper
+    {
+      pdu[targetindex] = *number++;
+      targetindex += 2;
+    }
+    else {  // even lower
+      pdu[targetindex+1] = *number++;
+    }
+  }
+  if ((addressLength & 1) == 1) {
+    pdu[targetindex] = 'F';
+    targetindex += 2;
+  }
+  pdu[targetindex++] = 0;
 }
 
 int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
@@ -133,8 +133,8 @@ int PDU::ascii_to_pdu(const char *ascii, char *pdu)
 {
   int r;
   int w;
-  char ascii7bit[70];
   int  len7bit;
+  char ascii7bit[MAX_SMS_LENGTH_7BIT];
 
   /* Start by converting the ISO-string to a 7bit-string */
   len7bit = convert_ascii_to_7bit(ascii, ascii7bit);
@@ -155,19 +155,27 @@ int PDU::ascii_to_pdu(const char *ascii, char *pdu)
 /* creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
     https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/
 */
-int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, enum eDCS dcs)
+int PDU::encodePDU(const char *recipient, const char *message)
 {
   int length = -1;
   int delta;
-  char tempbuf[100];
+  char tempbuf[PDU_BINARY_MAX_LENGTH];
   smsOffset = 0;
   int beginning = 0;
-//  std::cout << getSCAnumber() << std::endl;
+  bool intl = *recipient == '+';
+  enum eDCS dcs = ALPHABET_7BIT;
+  // if a single character has bit 7 high, change to 16 bit
+  for (int j=0;j<strlen(message);j++) {
+    if ((message[j] & 0x80) != 0) {
+      dcs = ALPHABET_16BIT;
+      break;
+    }
+  }
   setAddress(getSCAnumber(),INTERNATIONAL_NUMERIC,OCTETS); // set SCSA address
   beginning = smsOffset;     // length parameter to +CMGS starts from
   smsSubmit[smsOffset++] = 1;   // SMS-SUBMIT - no validation period
   smsSubmit[smsOffset++] = 0;   // message reference
-  setAddress(recipient,at,NIBBLES);
+  setAddress(recipient,intl ? INTERNATIONAL_NUMERIC : NATIONAL_NUMERIC,NIBBLES);
   smsSubmit[smsOffset++] = 0;   // PID
   switch (dcs) {
     case ALPHABET_7BIT:
@@ -194,13 +202,12 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
       break;
   }
   // now convert from binary to printable
+  memcpy(tempbuf,smsSubmit,sizeof(tempbuf));
   int newoffset = 0;
   for (int i=0;i<length;i++) {
-    putHex(smsSubmit[i],&tempbuf[newoffset]);
+    putHex(tempbuf[i],&smsSubmit[newoffset]);
     newoffset += 2;
   }
-  // copy back
-  memcpy(smsSubmit,tempbuf,length*2);
   smsSubmit[length*2] = 0x1a;  // add ctrl z
   smsSubmit[(length*2)+1] = 0;  // add end marker
 
@@ -208,7 +215,7 @@ int PDU::encodePDU(const char *recipient, eAddressType at, const char *message, 
 }
 
 // convert 2 printable characters to 1 byte
-uint8_t PDU::gethex(const char *pc)
+unsigned char PDU::gethex(const char *pc)
 {
   int i;
   if (isdigit(*pc))
@@ -349,7 +356,6 @@ int PDU::pdu_to_ascii(const char *pdu, int pdulength, char *ascii) {
 
 bool PDU::decodePDU(const char *pdu){
   bool rc = true;
-  //char buff[20];
   int index = 0;
   int outindex = 0;
   int i, pid, dcs;
@@ -359,16 +365,13 @@ bool PDU::decodePDU(const char *pdu){
   index = (X*2)+2;  // skip over SCA
   X = gethex(&pdu[index]);
   index += 2;
-//  std::cout << "SMS Deliver " << X;
   X = gethex(&pdu[index]);
   decodeAddress(&pdu[index],addressBuff,NIBBLES);
   index += X + 4; // skip over sender number
   pid = gethex(&pdu[index]);
   index += 2;
-//  std::cout << "PID " << pid;
   dcs = gethex(&pdu[index]);
   index += 2;
-//  std::cout << "DCS " << dcs;
   // decode SCTS timestamp
   outindex = 0;
   for (i = 0; i < 7; i++)
@@ -383,7 +386,6 @@ bool PDU::decodePDU(const char *pdu){
   X = gethex(&pdu[index]);
   index += 2;
   int dulength = X;   // in octets
-//  std::cout << "msg length " << dulength;
   int utflength = 0,utfoffset;
   unsigned short ucs2;
   *mesbuff = 0;
@@ -397,7 +399,6 @@ bool PDU::decodePDU(const char *pdu){
       rc = true;
       break;
     case DCS_8BIT_ALPHABET_MASK:
-      std::cout << "8 bit not supported\n";
       rc = false;
       break;
     case DCS_16BIT_ALPHABET_MASK:
@@ -405,7 +406,6 @@ bool PDU::decodePDU(const char *pdu){
       utfoffset = 0;
       while (dulength) {
         pdu_to_ucs2(&pdu[index],2,&ucs2); // treat 2 octets
-  //      Serial.println(ucs2,HEX);
         index += 4;
         dulength -=2;
         utflength = ucs2_to_utf8(ucs2,mesbuff + utfoffset);
@@ -420,7 +420,6 @@ bool PDU::decodePDU(const char *pdu){
   }
   return rc;
 }
-
 
 /*
     Utilities to convert between UTF-8 and UCS-2

@@ -5,7 +5,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "args": ["/dev/ttyUSB0"],
+            "args": ["/dev/ttyACM0"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

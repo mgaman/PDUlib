@@ -35,7 +35,6 @@ void serialHandler(int sp) {
                 // if so print contents and reset offset
                 if (linebuf[lineoffset-1] == 0x0a || lineoffset == MAX_LINE_LENGTH) {
                     linebuf[lineoffset] = 0;    // END MARKER
-//                    std::cout << lineNumber++ << " " << linebuf << std::endl;
                     inputQueue.push(std::string(linebuf));
                     lineoffset = 0;
                 }
