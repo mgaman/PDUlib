@@ -9,7 +9,7 @@ PDU mypdu = PDU();
 
   inpdu below is an example of xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 */
-const char *inpdu = "07911152140230F2040C9111525419896800001280018153832106D17B594ECF03";
+const char *inpdu = "07911152140230F2040C9111525419999900001280018153832106D17B594ECF03";
 void setup() {
   Serial.begin(9600);
   mypdu.decodePDU(inpdu);

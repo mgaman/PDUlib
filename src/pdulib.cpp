@@ -549,11 +549,6 @@ int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
     return 2;
 }
 
-#if 0
-const char *PDU::getSCA() {
-  return scabuff;
-}
-#endif
 const char *PDU::getSender() {
   return addressBuff;
 }
@@ -633,5 +628,5 @@ void PDU::setSCAnumber(const char *n){
 }
 
 const char *PDU::getSCAnumber() {
-  return scanumber;
+  return scabuff;
 }
