@@ -28,19 +28,18 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *to = "+972545919886";
+const char *to = "+***********";
 const char *message[] = {
-  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234" };
+  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",  // UCS-2
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234" // all ascii
+  };
 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp, int i) {
   int len = mypdu.encodePDU(to,message[i]);
-  int buflen = strlen(mypdu.getSMS());
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));
     // should wait for ">" but just do a delay instead
   sleep(1);
-  write(sp,mypdu.getSMS(),buflen);
-  //write(sp,&end,1);
+  write(sp,mypdu.getSMS(),strlen(mypdu.getSMS()));
 } 

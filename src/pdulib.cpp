@@ -165,7 +165,6 @@ int PDU::ascii_to_pdu(const char *ascii, char *pdu)
   return w;
 }
 
-//const char *SCSA = "+97254120032";
 /* creates an buffer in SMS SUBMIT format and returns length, -1 if invalid in anyway
     https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/
 */

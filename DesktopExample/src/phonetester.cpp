@@ -44,19 +44,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-#if 0
-    char *number1 = "0545919886";  // even number of digits
-    char *number2 = "97254591988";  // odd number of digits
-    mypdu.addressLength = strlen(number1);
-//    mypdu.digitSwap(number1,Temp);
-    mypdu.setAddress(number1,NATIONAL_NUMERIC,NIBBLES);
-    mypdu.setAddress(number1,NATIONAL_NUMERIC,OCTETS);
-    mypdu.addressLength = strlen(number2);
-//    mypdu.digitSwap(number2,Temp);
-    mypdu.setAddress(number2,NATIONAL_NUMERIC,NIBBLES);
-    mypdu.setAddress(number2,NATIONAL_NUMERIC,OCTETS);
-#endif
-
     std::cout << argv[1] << std::endl; 
     serial_port = open(argv[1], O_RDWR);
     if (serial_port < 0) 
