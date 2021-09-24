@@ -10,35 +10,35 @@ The code is written in plain C++ so it should be usable by both desktop and Ardu
 Incoming messages with an Alphabetic origin field are not yet supported. I do not yet have an example for debugging.
 # API
 ## decodePDU
-**bool decodePDU(const char *pdu)**<br>
-If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displayed as<br>
+<b>bool decodePDU(const char *pdu)</b>  
+If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displayed as.  
 +CMT: nn    where nn is length  
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
 After decoding the PDU its constituent parts can be recovered with the following methods.
 ## getSCAnumber
-**const char *getSCAnumber()**  
+<b>const char *getSCAnumber()</b>  
 Returns the number of the SCA, i.e. the Service Centre that delivered the message.  
 ## getSender
-**const char *getSender()**  
+<b>const char *getSender()</b>  
 Returns the phone number of the sender.  
 ## getTimeStamp
-**const char *getTimeStamp()**  
+<b>const char *getTimeStamp()</b>    
 Returns the timestamp of the message in the format YYMMDDHHMMSS.  
 ## getText
-**const char *getText()**  
+<b>const char *getText()</b>  
 Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.  
 ## encodePDU
-**int encodePDU(const char *recipient,const char *message)**  
+<b>int encodePDU(const char *recipient,const char *message)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all 7 bit ASCII, or not. If all 7 bit ASCII then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
 3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
 ## setSCAnumber
-**void setSCAnumber(const char *)**  
+<b>void setSCAnumber(const char *)</b>  
 Before one can encode an PDU the number of the Service Centre must be known.  
 Typically this can be discovered in a GSM modem by issuing the command  
 AT+CSCA?  
 ## getSMS  
-**const char *getSMS()**
+<b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
 # Development and Debugging
 The code was developed in VS Code and Ubuntu desktop environment.
@@ -76,7 +76,7 @@ int main(int argc,char *argv[]) {
 Assuming the data
 ```
 +CMT: "",24
-07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06
+0791xxxx140230F2040C91xxxxxxxxxxxx00001290813175212105C8329BFD06
 ```
 arrived from the GSM modem via the serial port. The code below would print out the senders phone number and the body of the message.  
 Note it is not necessary to save the SCA number if just handling incoming messages.
@@ -88,7 +88,7 @@ int main(int argc,char *argv[]) {
     // ensure that the modem is in PDU mode
     write(sp,"AT+CMGF=0\r",10); 
     mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06");
-    std::cout << mypdu.getSender() << std::endl;  // prints "+972nnnnnnnnn"
+    std::cout << mypdu.getSender() << std::endl;  // prints "+nnnnnnnnn"
     std::cout << mypdu.getText() << std::endl;  // prints "Hello"
     std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
 }  
@@ -117,9 +117,8 @@ PDU mypdu = PDU();
 void setup() {
   char temp[20];
   Serial.begin(9600);
-  mypdu.decodePDU("07917952140230F2040C9179525419896800001280018153832106D17B594ECF03");
+  mypdu.decodePDU("07917777140230F2040C9188885419999900001280018153832106D17B594ECF03");
   Serial.println(mypdu.getSCAnumber());
-  mypdu.setSCAnumber(mypdu.getSCAnumber());
   Serial.println(mypdu.getSender());
   Serial.println(mypdu.getTimeStamp());
   Serial.println(mypdu.getText());
@@ -150,6 +149,7 @@ void setup() {
   GSM.begin(9600);
   GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
   delay(1000);
+  mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here
   int len = mypdu.encodePDU(nat,notascii); 
   Serial.print("SMS length ");Serial.println(len);
   Serial.println(mypdu.getSMS());

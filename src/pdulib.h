@@ -138,7 +138,7 @@ private:
   char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
   int tslength;
   char tsbuff[20];    // big enough for timestamp
-  char scanumber[MAX_NUMBER_LENGTH];
+  char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
