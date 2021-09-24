@@ -11,35 +11,35 @@ Incoming messages with an Alphabetic origin field are not yet supported. I do no
 # API
 ## decodePDU
 **bool decodePDU(const char *pdu)**<br>
-If using a GSM modem, in PDU mode <b>not TEXT mode</b> an incoming message is displayed as<br>
-+CMT: nn    where nn is length<br>
-XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.<br>
+If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displayed as<br>
++CMT: nn    where nn is length  
+XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
 After decoding the PDU its constituent parts can be recovered with the following methods.
 ## getSCAnumber
-**const char *getSCAnumber()**<br>
-Returns the number of the SCA, i.e. the Service Centre that delivered the message.<br>
+**const char *getSCAnumber()**  
+Returns the number of the SCA, i.e. the Service Centre that delivered the message.  
 ## getSender
-**const char *getSender()**<br>
-Returns the phone number of the sender
+**const char *getSender()**  
+Returns the phone number of the sender.  
 ## getTimeStamp
-**const char *getTimeStamp()**<br>
-Returns the timestamp of the message in the format YYMMDDHHMMSS<br>
+**const char *getTimeStamp()**  
+Returns the timestamp of the message in the format YYMMDDHHMMSS.  
 ## getText
-**const char *getText()**<br>
-Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.<br>
+**const char *getText()**  
+Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.  
 ## encodePDU
-**int encodePDU(const char *recipient,const char *message)**<br>
+**int encodePDU(const char *recipient,const char *message)**  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all 7 bit ASCII, or not. If all 7 bit ASCII then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
 3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
 ## setSCAnumber
-**void setSCAnumber(const char *)**<br>
+**void setSCAnumber(const char *)**  
 Before one can encode an PDU the number of the Service Centre must be known.  
 Typically this can be discovered in a GSM modem by issuing the command  
 AT+CSCA?  
 ## getSMS  
-**const char *getSMS()**<br>
-This returns the address of the buffer created by **encodePDU**. The buffer already contains CTRL/Z as its last character so can be used as is
+**const char *getSMS()**
+This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
 # Development and Debugging
 The code was developed in VS Code and Ubuntu desktop environment.
 ## Desktop
@@ -93,41 +93,64 @@ int main(int argc,char *argv[]) {
     std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
 }  
 ```
-## Example provided
+## DesktopExample
 ### phonetester.cpp
 This is the main module. The main function expects 1 parameter, the serial port of the modem. The value of this parameter is defined in .vscode/launch.json/args.  
-After opening the serial port and configuring it correctly, two threads are started up.   **serialHandler** reads all incoming data from the modem, packages up complete lines and places the lines into a queue.  
+
+After opening the serial port and configuring it correctly, two threads are started up.  
+**serialHandler** reads all incoming data from the modem, packages up complete lines and places the lines into a queue.  
 **startup** configures the modem e.g. by setting SMS PDU mode and then exits.  
 Once **startup** finishes two more threads are started up.  
 **unsolicited** reads discrete lines from the queue created by **serialHandler** and processes each one as needed. I have provided some examples, feel free to add more.  
 **consoleHandler** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
-### Arduino
+## Arduino Examples
 When compiling for Arduino AVR, uncomment the line **#define PM** at the beginning of pdulib.h.  
-This transfers some static tables to progmem and frees up 128 bytes of RAM.
+This transfers some static tables to progmem and frees up 128 bytes of RAM.  
+My development environment was an SIM900 shield plugged into an Arduino Uno, configured to use software serial.  
+Note that I have ignored all of the actions required to power up the shield and analyze incoming data from the shield. That is outside the scope of this document.  
+### Decode
 ```
 #include <Arduino.h>
-#include <SoftwareSerial.h>
 #include <pdulib.h>
 
-SoftwareSerial GSM(2,3);
 PDU mypdu = PDU();
 void setup() {
   char temp[20];
   Serial.begin(9600);
-  GSM.begin(9600);
   mypdu.decodePDU("07917952140230F2040C9179525419896800001280018153832106D17B594ECF03");
   Serial.println(mypdu.getSCAnumber());
   mypdu.setSCAnumber(mypdu.getSCAnumber());
   Serial.println(mypdu.getSender());
   Serial.println(mypdu.getTimeStamp());
   Serial.println(mypdu.getText());
+}
+
+void loop() {
+}
+```
+### Encode
+```
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+#include <pdulib.h>
+
+SoftwareSerial GSM(2,3);
+
+// example receiver phone numbers
+const char *nat = "*********";   // national phone number
+const char *intl = "+*********";   // international phone number
+// example messages
+const char *allascii = "Hello";
+const char *notascii = "שלום";
+
+PDU mypdu = PDU();
+void setup() {
+  char temp[20];
+  Serial.begin(9600);
+  GSM.begin(9600);
   GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
   delay(1000);
-  // write your message and recipient number here
-//  int len = mypdu.encodePDU("+***********","Hello"); // international number, ascii 7 bit
-//  int len = mypdu.encodePDU("***********","Hello");  // national number, ascii 7 bit
-//  int len = mypdu.encodePDU("+***********",,"שלום",); // international number, CSU-2
-  int len = mypdu.encodePDU("***********","שלום");      // national number, CSU-2
+  int len = mypdu.encodePDU(nat,notascii); 
   Serial.print("SMS length ");Serial.println(len);
   Serial.println(mypdu.getSMS());
   sprintf(temp,"AT+CMGS=%d\r",len); // create SMS submit command
