@@ -1,0 +1,15 @@
+#
+#  PDUlib
+#
+# Classes
+PDU	KEYWORD1
+# Methods
+encodePDU	KEYWORD2
+getSMS	KEYWORD2
+setSCAnumber	KEYWORD2
+decodePDU	KEYWORD2
+getSCAnumber	KEYWORD2
+getSender	KEYWORD2
+getTimeStamp	KEYWORD2
+getText	KEYWORD2
+
