@@ -9,7 +9,7 @@
  * 
  */
 
-#define ARDUINO_BASE   // uncomment for Arduino
+//#define ARDUINO_BASE   // uncomment for Arduino
 #ifdef ARDUINO_BASE
 #include <Arduino.h>     
 #else
@@ -529,14 +529,19 @@ int PDU::utf8Length(const char *utf8) {
 /*
     convert an utf8 string to a single ucs2
     return number of octets
+    Correction: Allow for the creation of surrogate pairs
+    If the input character is in the range 0x10000 to 0x10ffff, convert into a pair of UCS2 words
 */
 int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
-    unsigned short ucs2 = 0;
+    unsigned short ucs2[2];
+    int numbytes = 0;
     int cont = utf8Length(utf8)-1; // number of continuation bytes
+    unsigned long utf16;
     if (cont < 0)
         return 0;
     if (cont == 0) {       // ascii 7 bit
-        ucs2 = *utf8;
+        ucs2[0] = *utf8;
+        numbytes = 2;
     }
     else {
         // read n bits of first byte then 6 bits of each continuation
@@ -544,14 +549,29 @@ int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
         int temp = cont;
         while (temp-- > 0)
             mask >>= 1;
-        ucs2 = *utf8++ & mask;
+        utf16 = *utf8++ & mask;
         // add continuation bytes
         while (cont-- > 0) {
-            ucs2 = (ucs2<<6) | (*(utf8++) & BITS0TO5ON);
+            utf16 = (utf16<<6) | (*(utf8++) & BITS0TO5ON);
+        }
+        // check if we need to make a surrogate pair
+        if (utf16 < 0x10000) {
+          ucs2[0] = utf16;
+          numbytes = 2;
+        }
+        else {
+          utf16 -= 0x10000;
+          ucs2[0] = 0xD800 | (utf16>>10);
+          ucs2[1] = 0xDC00 | (utf16 & 0x3ff);
+          numbytes = 4;
         }
     }
-    *target = (ucs2 >> 8) | ((ucs2 & 0x0ff) << 8);   // swap bytes
-    return 2;
+    *target = (ucs2[0] >> 8) | ((ucs2[0] & 0x0ff) << 8);   // swap bytes
+    if (numbytes > 2) {
+      target++;
+      *target = (ucs2[1] >> 8) | ((ucs2[1] & 0x0ff) << 8);   // swap bytes
+    }
+    return numbytes;
 }
 
 const char *PDU::getSender() {
@@ -623,11 +643,11 @@ int PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to
 int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero terminated string
   int octets=0;
   while (*utf8) {
-    int len = utf8Length(utf8);
-    utf8_to_ucs2_single(utf8,(short *)ucs2);
-    utf8 += len; // 
-    ucs2 += sizeof(short); 
-    octets += sizeof(short); 
+    int inputlen = utf8Length(utf8);
+    int ucslength = utf8_to_ucs2_single(utf8,(short *)ucs2);
+    utf8 += inputlen;   // bump input pointer
+    ucs2 += ucslength;  // bump output pointer
+    octets += ucslength; // bump total number of octets created
   }
   return octets;
 }
