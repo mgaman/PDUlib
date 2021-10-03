@@ -9,7 +9,7 @@
  * 
  */
 
-//#define ARDUINO_BASE   // uncomment for Arduino
+#define ARDUINO_BASE   // uncomment for Arduino
 #ifdef ARDUINO_BASE
 #include <Arduino.h>     
 #else
