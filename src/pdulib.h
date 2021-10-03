@@ -167,7 +167,7 @@ private:
   int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
   // get length of next utf8
   int utf8Length(const char *);
-  bool decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
+  int decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
   bool setAddress(const char *,eAddressType,eLengthType);
 };
 

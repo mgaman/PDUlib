@@ -17,7 +17,7 @@
 #include <string.h>
 #endif
 #include <ctype.h>
-#include "pdulib.h"
+#include <pdulib.h>
 
 //#define DIRECT
 
@@ -367,23 +367,29 @@ int PDU::pdu_to_ascii(const char *pdu, int pdulength, char *ascii) {
   return length;
 }
 
+/*
+  Decode a complete message
+  returns true for success else false
+*/
 bool PDU::decodePDU(const char *pdu){
   bool rc = true;
   int index = 0;
   int outindex = 0;
-  int i, pid, dcs;
+  int i, dcs;
   unsigned char X;
-  X = gethex(pdu);
-  decodeAddress(pdu,scabuff,OCTETS);
-  index = (X*2)+2;  // skip over SCA
-  X = gethex(&pdu[index]);
-  index += 2;
-  X = gethex(&pdu[index]);
-  decodeAddress(&pdu[index],addressBuff,NIBBLES);
-  index += X + 4; // skip over sender number
-  pid = gethex(&pdu[index]);
-  index += 2;
-  dcs = gethex(&pdu[index]);
+  i =  decodeAddress(pdu,scabuff,OCTETS);
+  if (i==0) {
+    return false;
+  }
+  index = i+4; // skip over SCA length and atn
+  index += 2;       // skip over SMS deliver
+  i = decodeAddress(&pdu[index],addressBuff,NIBBLES);
+  if (i==0) {
+    return false;
+  }
+  index += i+4; // skip over sender number length & atn
+  index += 2; // skip over PID
+  dcs = gethex(&pdu[index]); // data coding system
   index += 2;
   // decode SCTS timestamp
   outindex = 0;
@@ -396,9 +402,8 @@ bool PDU::decodePDU(const char *pdu){
   }
   tsbuff[outindex] = 0;
   // decode the actual data
-  X = gethex(&pdu[index]);
+  int dulength = gethex(&pdu[index]);
   index += 2;
-  int dulength = X;   // in octets
   int utflength = 0,utfoffset;
   unsigned short ucs2;
   *mesbuff = 0;
@@ -574,8 +579,11 @@ void PDU::BCDtoString(char *output, const char *input,int length) {
   *output = 0;  // add end of string
 }
 
-bool PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to readable starts with length octet
-  bool rc = false;
+/*
+    returns number of characters to occupied by number part (after length and atn)
+    returns 0 if number cannot be decoded
+*/
+int PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to readable starts with length octet
   int length = gethex(pdu);   // could be nibbles or octets
   // if octets, length include TON so reduce by 1
   // if nibbles length is just the number
@@ -593,18 +601,23 @@ bool PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu t
         *output++ = '+';  // add prefix and fall through
       case 2:  // national number
         BCDtoString(output,pdu,addressLength);
+        if ((addressLength&1)==1) // if odd, bump 1
+          addressLength++;  // we could do this before calling BCDtoString
         break;
-        rc = true;
       case 5: // alphabetic
+        pdu_to_ascii(pdu,addressLength,output);
+        if ((addressLength&1)==1) // if odd, bump 1
+          addressLength++; // we could do NOT this before calling pdu_to_ascii
         break;
       default:
+        addressLength = 0;
         break;
     }
   }
   else {
-    ; // dont know how to handle EXT
+    addressLength = 0; // dont know how to handle EXT
   }
-  return rc;
+  return addressLength;
 }
 
 int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero terminated string
