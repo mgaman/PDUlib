@@ -9,7 +9,7 @@
  * 
  */
 
-#define ARDUINO_BASE   // uncomment for Arduino
+//#define ARDUINO_BASE   // uncomment for Arduino
 #ifdef ARDUINO_BASE
 #include <Arduino.h>     
 #else
@@ -446,53 +446,88 @@ bool PDU::decodePDU(const char *pdu){
     Author David Henry mgadriver@gmail.com
 */
 
+#define BITS7654ON   0B11110000
 #define BITS765ON   0B11100000
 #define BITS76ON    0B11000000
 #define BIT7ON6OFF  0B10000000
 #define BITS0TO5ON  0B00111111
+bool SPstart = false;
+unsigned short spair[2]; // save surrogate pair
 
 int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
 {
-    if (/*ucs2>=0 and*/ ucs2 <= 0x7f)  // 7F(16) = 127(10)
+  if (/*ucs2>=0 and*/ ucs2 <= 0x7f)  // 7F(16) = 127(10)
+  {
+      outbuf[0] = ucs2;
+      return 1;
+  }
+  else if (ucs2 <= 0x7ff)  // 7FF(16) = 2047(10)
+  {
+      unsigned char c1 = BITS76ON, c2 = BIT7ON6OFF;
+
+      for (int k=0; k<11; ++k)
+      {
+          if (k < 6)
+              c2 |= (ucs2 % 64) & (1 << k);
+          else
+              c1 |= (ucs2 >> 6) & (1 << (k - 6));
+      }
+
+      outbuf[0] = c1;
+      outbuf[1] = c2;
+      
+      return 2;
+  }
+  else if ((ucs2 & 0xff00) == 0xD800) {   // start of surrogate pair
+    SPstart = true;
+    spair[0] = ucs2;
+  }
+  else if (SPstart) {
+    SPstart = false;
+    spair[1] = ucs2;
+    // extract code point from pair
+    unsigned long utf16 = ((spair[0] & ~0xd800)<<10) + (spair[1]&0x03ff);
+    unsigned char c1 = BITS7654ON, c2 = BIT7ON6OFF, c3 = BIT7ON6OFF, c4 = BIT7ON6OFF;
+    utf16 += 0x10000;
+    for (int k=0; k<22; ++k)  // 22 bits in pack
     {
-        outbuf[0] = ucs2;
-        return 1;
+        if (k < 6)    // bits 0-6
+          c4 |= (utf16 % 64) & (1 << k);
+        else if (k < 12) // bits 6-11
+          c3 |= (utf16 >> 6) & (1 << (k - 6));
+        else if (k < 18)  // bits 7-18
+          c2 |= (utf16 >> 12) & (1 << (k - 12));
+        else              // bits 19-22
+          c1 |= (utf16 >> 18) & (1 << (k - 18));
     }
-    else if (ucs2 <= 0x7ff)  // 7FF(16) = 2047(10)
+    outbuf[0] = c1;
+    outbuf[1] = c2;
+    outbuf[2] = c3;
+    outbuf[3] = c4;
+
+    return 4;
+  }
+  else // if (ucs2 <= 0xffff)  // FFFF(16) = 65535(10)
+  {
+    unsigned char c1 = BITS765ON, c2 = BIT7ON6OFF, c3 = BIT7ON6OFF;
+
+    for (int k=0; k<16; ++k)  // 16 bits in pack
     {
-        unsigned char c1 = BITS76ON, c2 = BIT7ON6OFF;
-
-        for (int k=0; k<11; ++k)
-        {
-            if (k < 6)
-                c2 |= (ucs2 % 64) & (1 << k);
-            else
-                c1 |= (ucs2 >> 6) & (1 << (k - 6));
-        }
-
-        outbuf[0] = c1;
-        outbuf[1] = c2;
-        
-        return 2;
+        if (k < 6)
+          c3 |= (ucs2 % 64) & (1 << k);
+        else if (k < 12)
+          c2 |= (ucs2 >> 6) & (1 << (k - 6));
+        else
+          c1 |= (ucs2 >> 12) & (1 << (k - 12));
     }
-    else // if (ucs2 <= 0xffff)  // FFFF(16) = 65535(10)
-    {
-        unsigned char c1 = BITS765ON, c2 = BIT7ON6OFF, c3 = BIT7ON6OFF;
+    outbuf[0] = c1;
+    outbuf[1] = c2;
+    outbuf[2] = c3;
 
-        for (int k=0; k<16; ++k)
-        {
-            if (k < 6)  c3 |= (ucs2 % 64) & (1 << k);
-            else if (k < 12) c2 |= (ucs2 >> 6) & (1 << (k - 6));
-            else c1 |= (ucs2 >> 12) & (1 << (k - 12));
-        }
-        outbuf[0] = c1;
-        outbuf[1] = c2;
-        outbuf[2] = c3;
+    return 3;
+  }
 
-        return 3;
-    }
-
-    return 0;
+  return 0;
 }
 
 #if 1
