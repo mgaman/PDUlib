@@ -6,7 +6,7 @@
 
 #include "pdulib.h"
 
-std::string menu = "Menu\n" "  s send sms\n";
+std::string menu = "Menu\n" "  [sStT] send sms\n";
 void sendSMS(int sp,int i);
 void consoleHandler(int sp) {
     char linein[10];
@@ -20,6 +20,12 @@ void consoleHandler(int sp) {
             case 'S':
                 sendSMS(sp,1);
                 break;
+            case 't':
+                sendSMS(sp,2);
+                break;
+            case 'T':
+                sendSMS(sp,3);
+                break;
             default:
                 std::cout << menu;
         }
@@ -28,14 +34,18 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *to = "+***********";
+const char *to = "**********";   // place destination phonr number here
+const char *sca = "*********";   // place your SCA number here
 const char *message[] = {
-  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",  // UCS-2
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234" // all ascii
+  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",  // GSM 16 bit
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234", // all ascii
+  "J£mjòø",   // GSM 7 bit 
+  "abcd🍖😃אבגד"  // surrogate pairs
   };
 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp, int i) {
+  mypdu.setSCAnumber(sca);
   int len = mypdu.encodePDU(to,message[i]);
   sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
   write(sp,writeBuf,strlen(writeBuf));

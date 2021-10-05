@@ -13,10 +13,9 @@
 #include <errno.h> // Error integer and strerror() function
 #include <termios.h> // Contains POSIX terminal control definitions
 #include <unistd.h> // write(), read(), close()
-#include "pdulib.h"
+#include <pdulib.h>
 
 int serial_port;
-//static char read_buf [256];
 std::queue<std::string> inputQueue;
 
 // Create new termios struct, we call it 'tty' for convention
@@ -35,7 +34,6 @@ void consoleHandler(int sp);
 // must have been initialized with a call to tcgetattr() overwise behaviour
 // is undefined
 PDU mypdu = PDU();
-//char Temp[20];
 
 // Check for errors
 int main(int argc, char *argv[]) {

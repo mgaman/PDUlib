@@ -1,0 +1,7 @@
+Features to test
+
+Encoding and Decoding
+    1. GSM 7 bit alphabet should be sent as 7 bit. Escape characters handled.
+    2. UCS2 cover all ranges < 0x7ff, < 0xffff and surrogate pairs
+SCA and Sender/Destination Numbers.
+    1. Local and international, odd length and even length.

@@ -3,14 +3,16 @@
 #
 # Classes
 PDU	KEYWORD1
-# Methods
+# Methods for sending SMS
 encodePDU	KEYWORD2
-getSMS	KEYWORD2
 setSCAnumber	KEYWORD2
+getSMS	KEYWORD2
+# methods for receiving SMS messages
 decodePDU	KEYWORD2
 getSCAnumber	KEYWORD2
 getSender	KEYWORD2
 getTimeStamp	KEYWORD2
 getText	KEYWORD2
+# Helpers to build a string to send
 buildUtf16  KEYWORD2
-
+buildUtf  KEYWORD2

@@ -16,33 +16,56 @@ XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line t
 After decoding the PDU its constituent parts can be recovered with the following methods.
 ## getSCAnumber
 <b>const char *getSCAnumber()</b>  
-Returns the number of the SCA, i.e. the Service Centre that delivered the message.  
+Returns the number of the SCA from an incoming message, i.e. the Service Centre that delivered the message.  
 ## getSender
 <b>const char *getSender()</b>  
-Returns the phone number of the sender.  
+Returns the phone number of the sender from an incoming message.  
 ## getTimeStamp
 <b>const char *getTimeStamp()</b>    
-Returns the timestamp of the message in the format YYMMDDHHMMSS.  
+Returns the timestamp of an incoming message in the format YYMMDDHHMMSS.  
 ## getText
 <b>const char *getText()</b>  
-Returns the body of the message. Note that it is a UTF-8 string so should be displayable, as is.  
+Returns the body of an incoming message. Note that it is a UTF-8 string. In a Desktop environment it should be displayable, as is.  However in a resource restricted environment e.g. an OLED screen attached to an Arduino you will probably have to create a solution for non-ASCII characters.
 ## encodePDU
 <b>int encodePDU(const char *recipient,const char *message)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
-2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all 7 bit ASCII, or not. If all 7 bit ASCII then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
+2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
 3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
-Before one can encode an PDU the number of the Service Centre must be known.  
+Before one can encode and send a PDU the number of the Service Centre must be known.  
 Typically this can be discovered in a GSM modem by issuing the command  
 AT+CSCA?  
 ## getSMS  
 <b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
 # Development and Debugging
-The code was developed in VS Code and Ubuntu desktop environment.
+The code was developed in VS Code and Ubuntu desktop environment.  
+There are a few differences between the VS Code environment and the Arduino IDE which is the default mode for many Arduino developers. The main difference is the file name of an Arduino sketch. In VS Code this is a classical C++ file with the extension **cpp** e.g. **anyName.cpp**. In Arduino IDE the extension is **ino** and the leading part of the name **must** be the same as that of the folder enclosing the sketch e.g. for a sketch called **blah** the sketch folder is **blah** and the sketch file name **blah.ino**.  
+After installing this library, go to the Arduino/libraries/pdulib/examples folder and rename each source file from **name.cpp** to **name.ino**.<br>
+Arduino has its own peculiarities for the location of library header files. It folds many standard libraries into **Arduino.h** whereas the Desktop user has to name them specifically. This is the reason behind the **ARDUINO_BASE** macro. 
+```
+#ifdef ARDUINO_BASE
+#include <Arduino.h>     
+#else
+#include <math.h>
+#include <string.h>
+#endif
+```
+The library, as released, is configured for the Arduino user i.e. in **pdulib.cpp** the macro **ARDUINO_BASE** is enabled. However, if you clone this library for further development and intend to use the Desktop environment, do as follows.  
+1. Comment out the macro ARDUINO_BASE. You can now compile for the desktop.   
+2. For Arduino sketches, add the line **build_flags=-DARDUINO_BASE** to the platformio.ini configuration file. You can now compile for Arduino.<br>
+
+When developing a new Arduino sketch you must also show the sketch where pdulib is located. In a classical PlatformIO layout, library files are located in the pdulib/examples/sketch/lib/pdulib folder. In reality they are in the pdulib/src folder. To overcome this, create the folder pdulib/examples/sketch/lib/pdulib and create soft links from there to the actual source files.
+```
+cd pdulib/examples/sketch/lib
+mkdir pdulib
+cd pdulib
+ln -s ../../../../src/pdulib.cpp pdulib.cpp
+ln -s ../../../../src/pdulib.h pdulib.h
+```
 ## Desktop
-My GSM modem is an SIM900 Arduino breakout board connected to an FTDI USB-Serial device, thus it appears as an /dev/ttyUSB* device.  
+My GSM modem is an SIM900 Arduino breakout board connected to an FTDI USB-Serial device, thus it appears as an /dev/ttyUSB* device. On Windows it will be COMnn where nn is a number asigned by the OS.    
 The modem needs its own power supply as the current supplied by the FTDI is insufficient.  
 Debugging in desktop mode is more convenient as it allows one to set breakpoints, watch variables etc. Something not available to the Arduino developer.  
 ### Serial port
@@ -92,26 +115,36 @@ int main(int argc,char *argv[]) {
     std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
 }  
 ```
-## buildUtf16
-<b>void  buildUtf16(unsigned long codepoint, char *target)</b>
-1. codepoint. The code position of a character whose value is > 0xFFFF e.g. emojis. For
-examples see https://unicode.org/emoji/charts/full-emoji-list.html .  
+## buildUtf
+<b>void  buildUtf(unsigned long codepoint, char *target)</b>  
+This is a helper method for those environments where inserting characters e.g. an emoji is just not possible. The Arduino IDE is a good example.  
+<b>Supercedes builtUtf16.</b>  
+1. codepoint. The code position of a character e.g. smiley emoji, ace of spades. For
+examples see https://en.wikipedia.org/wiki/List_of_Unicode_characters .  
 2. target. A buffer to receive the string.   
-This is a helper method for those environments where inserting characters e.g. an emoji is just not possible. The Arduino IDE is a good example.
 ### Example
 ```
 #include <pdulib.h>
 PDU mypdu = PDU();
 char finalMsg[50]; // assemble final message here
 char tempbuf[10];  // temporary workspace
-#define POO 0x1F4A9
 
+// some Unicode codepoints
+#define POO 0x1F4a9
+#define SPADE 0x2660
+#define YEN 165
+  
 int main() {
   // build up the message
   strcpy(finalMsg,"Here is some poo ");
-  mypdu.buildUtf16(POO,tempbuf);
-  strcat(finalMsg,temp);
+  mypdu.buildUtf(POO,tempbuf);
+  strcat(finalMsg,tempbuf);
+  mypdu.buildUtf(SPADE,tempbuf);
+  strcat(finalMsg,tempbuf);
+  mypdu.buildUtf(YEN,tempbuf);
+  strcat(finalMsg,tempbuf);
   // now carry on as normal
+  mypdu.setSCAnumber("+12125557777");
   int len = mypdu.encodePDU("+12125556666",finalMsg);
   ....
   ....

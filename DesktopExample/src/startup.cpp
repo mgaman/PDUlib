@@ -51,7 +51,7 @@ void startup(int sp) {
 //            std::cout << "Stage " << stage << std::endl;
             switch (stage) {
                 case 0:  // waiting for CREG   
-#if 0
+#if 0    // set to false if you manually reset the GSM device
                     if (response.compare(0,6,"NORMAL") == 0) {
                         stage = 0;
                     }

@@ -18,10 +18,10 @@ LFLAGS = -pthread
 OUTPUT	:= output
 
 # define source directory
-SRC		:= src
+SRC		:=  DesktopExample/src src
 
 # define include directory
-INCLUDE	:= include
+INCLUDE	:= DesktopExample/src include src
 
 # define lib directory
 LIB		:= lib

@@ -2,11 +2,21 @@
  * @file pdulib.cpp
  * @author David Henry (mgadriver@gmail.com)
  * @brief A general purpose libray for encoding/decoding PDU data for GSM modems
- * @version 0.1
+ * @version 0.4.4
  * @date 2021-09-23
  * 
  * @copyright Copyright (c) 2021
  * 
+ * Release History
+ * 0.1.1 Original release
+ * 0.2.1 Fix odd length Sender Address bug
+ *       Add support for emojis
+ * 0.2.2 Added correct surrogate pair handling for UTF16
+ * 0.3.3 Fixed getSCAnumber bug
+ *       Added buildUtf16 helper
+ * 0.4.4 Fixed getSCAnumber bug (again)
+ *       Replaced buildUtf16 helper by buildUtf (good for any codepoint)
+ *       Fixed incorrect handling of special characters in ALPHABET_7BIT situation
  */
 
 #define ARDUINO_BASE   // uncomment for Arduino
@@ -106,16 +116,16 @@ void PDU::digitSwap(const char *number, char *pdu) {
   pdu[targetindex++] = 0;
 }
 
-int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
+/*
+    Input is ISO-8859 8 bit ASCII, 0 to 255  
+*/
+int PDU::convert_utf8_to_gsm7bit(const char *ascii, char *a7bit) {
   int r;
   int w;
 
   r = 0;
   w = 0;
   while (ascii[r] != 0) {
-    //    lu = pgm_read_word_near(lookup_ascii8to7+(uint8_t)ascii[r]);
-    //    Serial.print("lu: " );
-    //    Serial.println(lu,HEX);
 #ifdef PM
     if (pgm_read_word_near(lookup_ascii8to7 + (unsigned char)ascii[r])<256)
 #else
@@ -142,22 +152,26 @@ int PDU::convert_ascii_to_7bit(const char *ascii, char *a7bit) {
   }
   return w;
 }
-
-int PDU::ascii_to_pdu(const char *ascii, char *pdu)
+/*
+    UTF8 string may contain characters that need to be changed from 8 bit ISO-8859
+    to GSM 7 bit e.g. Pound Sterling from 0xA3 to 0x01 or escaped characters e.g.
+    Left Square 0x5B to ESC/0x3C, Euro 0x20AC to ESC/0x65
+*/
+int PDU::utf8_to_packed7bit(const char *utf8, char *pdu)
 {
   int r;
   int w;
   int  len7bit;
-  char ascii7bit[MAX_SMS_LENGTH_7BIT];
+  char gsm7bit[MAX_SMS_LENGTH_7BIT];
 
   /* Start by converting the ISO-string to a 7bit-string */
-  len7bit = convert_ascii_to_7bit(ascii, ascii7bit);
+  len7bit = convert_utf8_to_gsm7bit(utf8, gsm7bit);
 
   /* Now, we can create a PDU string by packing the 7bit-string */
   r = 0;
   w = 0;
   while (r<len7bit) {
-    pdu[w] = ((ascii7bit[r] >> (w % 7)) & 0x7F) | ((ascii7bit[r + 1] << (7 - (w % 7))) & 0xFF);
+    pdu[w] = ((gsm7bit[r] >> (w % 7)) & 0x7F) | ((gsm7bit[r + 1] << (7 - (w % 7))) & 0xFF);
     if ((w % 7) == 6) r++;
     r++;
     w++;
@@ -177,14 +191,28 @@ int PDU::encodePDU(const char *recipient, const char *message)
   int beginning = 0;
   bool intl = *recipient == '+';
   enum eDCS dcs = ALPHABET_7BIT;
-  // if a single character has bit 7 high, change to 16 bit
+#if 0  // if a single character has bit 7 high, change to 16 bit
   for (int j=0;j<strlen(message);j++) {
     if ((message[j] & 0x80) != 0) {
       dcs = ALPHABET_16BIT;
       break;
     }
   }
-  setAddress(getSCAnumber(),INTERNATIONAL_NUMERIC,OCTETS); // set SCSA address
+#else
+  // if a single character has bit 7 high and is not a special GSM-7 character, change to 16 bit
+  for (int j=0;j<strlen(message); j++) {
+    if ((message[j] & 0x80) != 0) {
+      // check if this is a special character
+      short nu = lookup_ascii8to7[message[j]];
+      if (nu != NPC7)
+      {
+        dcs = ALPHABET_16BIT;
+        break;
+      }
+    }
+  }
+#endif
+  setAddress(scanumber,INTERNATIONAL_NUMERIC,OCTETS); // set SCSA address
   beginning = smsOffset;     // length parameter to +CMGS starts from
   smsSubmit[smsOffset++] = 1;   // SMS-SUBMIT - no validation period
   smsSubmit[smsOffset++] = 0;   // message reference
@@ -203,7 +231,7 @@ int PDU::encodePDU(const char *recipient, const char *message)
   switch (dcs) {
     case ALPHABET_7BIT:
       smsSubmit[smsOffset++] = strlen(message);  // length in septets
-      delta = ascii_to_pdu(message,&smsSubmit[smsOffset]);
+      delta = utf8_to_packed7bit(message,&smsSubmit[smsOffset]);
       length = smsOffset + delta; // allow for length byte
       break;
     case ALPHABET_16BIT:
@@ -291,7 +319,8 @@ int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
         ascii[w++] = pgm_read_byte(lookup_ascii7to8 + (unsigned char)a7bit[r]);
 #else
       if ((lookup_ascii7to8[(unsigned char)a7bit[r]]) != 27) {
-        ascii[w++] = lookup_ascii7to8[(unsigned char)a7bit[r]];
+//        ascii[w++] = lookup_ascii7to8[(unsigned char)a7bit[r]];
+        w += buildUtf(lookup_ascii7to8[(unsigned char)a7bit[r]],&ascii[w]);
 #endif
     }
     else {
@@ -324,6 +353,10 @@ int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
         break;
       case    64:
         ascii[w++] = '|';
+        break;
+      case    0x65:
+        //ascii[w++] = '€';  // euro
+        w += buildUtf(0x20AC,&ascii[w]);
         break;
       default:
         ascii[w++] = NPC8;
@@ -530,7 +563,6 @@ int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
   return 0;
 }
 
-#if 1
 int PDU::utf8Length(const char *utf8) {
     int length = 1;
     unsigned char mask = BITS76ON;
@@ -560,7 +592,6 @@ int PDU::utf8Length(const char *utf8) {
     }
     return length;
 }
-#endif
 /*
     convert an utf8 string to a single ucs2
     return number of octets
@@ -696,21 +727,70 @@ void PDU::setSCAnumber(const char *n){
 }
 
 const char *PDU::getSCAnumber() {
-  return scanumber;
+  return scabuff;  // from INCOMING SMS 
 }
 
 void PDU::buildUtf16(unsigned long cp, char *target) {
-    unsigned char buf[5] = {0xf0,0x80,0x80,0x80,0};
-    for (int k=0; k<22; ++k)  // 22 bits in pack
+  buildUtf(cp,target);    // for backward compatibility
+}
+
+int PDU::buildUtf(unsigned long cp, char *target) {
+    unsigned char buf[5];
+    int length;
+    if (cp <= 0x7f)      // ASCII
     {
-        if (k < 6)    // bits 0-6
-          buf[3] |= (cp % 64) & (1 << k);
-        else if (k < 12) // bits 6-11
-          buf[2] |= (cp >> 6) & (1 << (k - 6));
-        else if (k < 18)  // bits 7-18
-          buf[1] |= (cp >> 12) & (1 << (k - 12));
-        else              // bits 19-22
-          buf[0] |= (cp >> 18) & (1 << (k - 18));
+      length = 1;
+      buf[0] = cp;
+      buf[length] = 0;
     }
-   memcpy(target,buf,sizeof(buf));
+    else if (cp <= 0x7ff) { // Extended latin, greek, hebrew, arabic, cyrillic
+      length = 2;
+      buf[0] = BITS76ON;
+      buf[1] = BIT7ON6OFF;
+      buf[length] = 0;
+      for (int k=0; k<11; ++k) // 11 bits in pack
+      {
+        if (k < 6)
+            buf[1] |= (cp % 64) & (1 << k);
+        else
+            buf[0] |= (cp >> 6) & (1 << (k - 6));
+      }
+    }
+    else if (cp <= 0xffff) {    // many Asian languages
+      length = 3;
+      buf[0] = BITS765ON;
+      buf[1] = BIT7ON6OFF;
+      buf[2] = BIT7ON6OFF;
+      buf[length] = 0;
+      for (int k=0; k<16; ++k)  // 16 bits in pack
+      {
+        if (k < 6)
+          buf[2] |= (cp % 64) & (1 << k);
+        else if (k < 12)
+          buf[1] |= (cp >> 6) & (1 << (k - 6));
+        else
+          buf[0] |= (cp >> 12) & (1 << (k - 12));
+      }
+    }
+    else if (cp > 0x10000) {     // emojis, drawings, chinese
+      length = 4;
+      buf[0] = BITS7654ON;
+      buf[1] = BIT7ON6OFF;
+      buf[2] = BIT7ON6OFF;
+      buf[3] = BIT7ON6OFF;
+      buf[length] = 0;
+      for (int k=0; k<22; ++k)  // 22 bits in pack
+      {
+          if (k < 6)    // bits 0-6
+            buf[3] |= (cp % 64) & (1 << k);
+          else if (k < 12) // bits 6-11
+            buf[2] |= (cp >> 6) & (1 << (k - 6));
+          else if (k < 18)  // bits 7-18
+            buf[1] |= (cp >> 12) & (1 << (k - 12));
+          else              // bits 19-22
+            buf[0] |= (cp >> 18) & (1 << (k - 18));
+      }
+    }
+   strcpy(target,(char *)buf);
+   return strlen(target);
 }

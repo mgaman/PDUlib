@@ -96,7 +96,7 @@ public:
   void setSCAnumber(const char *number);
   /**
    * @brief Decode a PDU, typically received from a GSM modem when in PDU mode.
-   * After a successful decoding you can retrieve the components parts, desctibed below.
+   * After a successful decoding you can retrieve the components parts, described below.
    * 
    * @param pdu A pointer to the PDU
    * @return true If the decoding succeeded.
@@ -135,6 +135,13 @@ public:
    * @param target Where to place the string
    */
   void buildUtf16(unsigned long codepoint, char *target); // build a string from a codepoint
+  /**
+   * @brief Create a UTF string from a codepoint. Handles practically anything
+   * 
+   * @param codepoint Examples https://en.wikipedia.org/wiki/List_of_Unicode_characters
+   * @param target Where to place the string
+   */
+  int buildUtf(unsigned long codepoint, char *target); // build a string from a codepoint
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -157,10 +164,10 @@ private:
   void BCDtoString(char *number, const char *pdu,int length);
   void digitSwap(const char *number, char *pdu);
   
-  int ascii_to_pdu(const char *ascii, char *pdu);
+  int utf8_to_packed7bit(const char *utf8, char *pdu);
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
 
-  int convert_ascii_to_7bit(const char *ascii, char *a7bit);
+  int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit);
   int convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii);
 
   unsigned char gethex(const char *pc);
@@ -176,13 +183,15 @@ private:
   int utf8Length(const char *);
   int decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
   bool setAddress(const char *,eAddressType,eLengthType);
+//  //  Get SCA number for outgoing SMS
+//  const char *getMySCAnumber();
 };
 
 /****************************************************************************
 This lookup table converts from ISO-8859-1 8-bit ASCII to the
 7 bit "default alphabet" as defined in ETSI GSM 03.38
 
-ISO-characters that don't have any correspondning character in the
+ISO-characters that don't have any corresponding character in the
 7-bit alphabet is replaced with the NPC7-character.  If there's
 a close match between the ISO-char and a 7-bit character (for example
 the letter i with a circumflex and the plain i-character) a substitution

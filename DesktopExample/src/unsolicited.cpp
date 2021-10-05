@@ -52,6 +52,8 @@ void unsolicited(int sp) {
             }
             else if (nextLineSMS) {
                 if (mypdu.decodePDU(response.c_str())) {
+                    std::cout << "SCA: " << mypdu.getSCAnumber() << std::endl;
+                    std::cout << "Time: " << mypdu.getTimeStamp() << std::endl;
                     std::cout << "From: " << mypdu.getSender() << std::endl;
                     std::cout << "Message: " << mypdu.getText() << std::endl;
                 }
