@@ -12,4 +12,5 @@ getSCAnumber	KEYWORD2
 getSender	KEYWORD2
 getTimeStamp	KEYWORD2
 getText	KEYWORD2
+buildUtf16  KEYWORD2
 

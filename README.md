@@ -92,6 +92,32 @@ int main(int argc,char *argv[]) {
     std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
 }  
 ```
+## buildUtf16
+<b>void  buildUtf16(unsigned long codepoint, char *target)</b>
+1. codepoint. The code position of a character whose value is > 0xFFFF e.g. emojis. For
+examples see https://unicode.org/emoji/charts/full-emoji-list.html .  
+2. target. A buffer to receive the string.   
+This is a helper method for those environments where inserting characters e.g. an emoji is just not possible. The Arduino IDE is a good example.
+### Example
+```
+#include <pdulib.h>
+PDU mypdu = PDU();
+char finalMsg[50]; // assemble final message here
+char tempbuf[10];  // temporary workspace
+#define POO 0x1F4A9
+
+int main() {
+  // build up the message
+  strcpy(finalMsg,"Here is some poo ");
+  mypdu.buildUtf16(POO,tempbuf);
+  strcat(finalMsg,temp);
+  // now carry on as normal
+  int len = mypdu.encodePDU("+12125556666",finalMsg);
+  ....
+  ....
+}
+```   
+
 ## DesktopExample
 ### phonetester.cpp
 This is the main module. The main function expects 1 parameter, the serial port of the modem. The value of this parameter is defined in .vscode/launch.json/args.  

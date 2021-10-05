@@ -128,6 +128,13 @@ public:
    * @return const unsigned char* The message in UTF-8 format.
    */
   const char *getText();
+  /**
+   * @brief Create a UTF16 string from a codepoint > 0xffff
+   * 
+   * @param codepoint Examples https://unicode.org/emoji/charts/full-emoji-list.html
+   * @param target Where to place the string
+   */
+  void buildUtf16(unsigned long codepoint, char *target); // build a string from a codepoint
 private:
   // following for storing decode fields of incoming messages
   int scalength;

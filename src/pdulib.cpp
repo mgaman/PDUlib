@@ -696,5 +696,21 @@ void PDU::setSCAnumber(const char *n){
 }
 
 const char *PDU::getSCAnumber() {
-  return scabuff;
+  return scanumber;
+}
+
+void PDU::buildUtf16(unsigned long cp, char *target) {
+    unsigned char buf[5] = {0xf0,0x80,0x80,0x80,0};
+    for (int k=0; k<22; ++k)  // 22 bits in pack
+    {
+        if (k < 6)    // bits 0-6
+          buf[3] |= (cp % 64) & (1 << k);
+        else if (k < 12) // bits 6-11
+          buf[2] |= (cp >> 6) & (1 << (k - 6));
+        else if (k < 18)  // bits 7-18
+          buf[1] |= (cp >> 12) & (1 << (k - 12));
+        else              // bits 19-22
+          buf[0] |= (cp >> 18) & (1 << (k - 18));
+    }
+   memcpy(target,buf,sizeof(buf));
 }
