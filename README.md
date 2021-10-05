@@ -110,8 +110,9 @@ int main() {
   // build up the message
   strcpy(finalMsg,"Here is some poo ");
   mypdu.buildUtf16(POO,tempbuf);
-  strcat(finalMsg,temp);
+  strcat(finalMsg,tempbuf);
   // now carry on as normal
+  mypdu.setSCAnumber("+12125557777");
   int len = mypdu.encodePDU("+12125556666",finalMsg);
   ....
   ....
