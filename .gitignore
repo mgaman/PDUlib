@@ -2,3 +2,6 @@ src/*.o
 *.log
 myapp
 src/a.out
+examples/Decode/.pio
+examples/Encode/.pio
+examples/Incoming/.pio
