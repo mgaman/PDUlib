@@ -5,3 +5,7 @@ src/a.out
 examples/Decode/.pio
 examples/Encode/.pio
 examples/Incoming/.pio
+examples/Decode/lib
+examples/Encode/lib
+examples/Incoming/lib
+
