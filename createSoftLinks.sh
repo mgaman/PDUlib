@@ -9,10 +9,10 @@ do
 	cd $d
 	cd lib
 	rm -r pdulib
-#	mkdir pdulib
-#	cd pdulib
-#	ln -s ../../../../src/pdulib.cpp pdulib.cpp
-#	ln -s ../../../../src/pdulib.h pdulib.h
+	mkdir pdulib
+	cd pdulib
+	ln -s ../../../../src/pdulib.cpp pdulib.cpp
+	ln -s ../../../../src/pdulib.h pdulib.h
 done
 echo 'All done'
 
