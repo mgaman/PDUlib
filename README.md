@@ -42,7 +42,7 @@ This returns the address of the buffer created by **encodePDU**. The buffer alre
 # Development and Debugging
 The code was developed in VS Code and Ubuntu desktop environment.  
 There are a few differences between the VS Code environment and the Arduino IDE which is the default mode for many Arduino developers. The main difference is the file name of an Arduino sketch. In VS Code this is a classical C++ file with the extension **cpp** e.g. **anyName.cpp**. In Arduino IDE the extension is **ino** and the leading part of the name **must** be the same as that of the folder enclosing the sketch e.g. for a sketch called **blah** the sketch folder is **blah** and the sketch file name **blah.ino**.  
-After installing this library, go to the Arduino/libraries/pdulib/examples folder and rename each source file from **name.cpp** to **name.ino**.<br>
+I have constructed the source tree so that it is valid for both Arduino IDE and PlatformIO environments. For example the files **pdulib/examples/Decode/Decode.ino** and **pdulib/examples/Decode/src/Decode.cpp** are identical but with different names and location.<br>
 Arduino has its own peculiarities for the location of library header files. It folds many standard libraries into **Arduino.h** whereas the Desktop user has to name them specifically. This is the reason behind the **ARDUINO_BASE** macro. 
 ```
 #ifdef ARDUINO_BASE
@@ -56,7 +56,8 @@ The library, as released, is configured for the Arduino user i.e. in **pdulib.cp
 1. Comment out the macro ARDUINO_BASE. You can now compile for the desktop.   
 2. For Arduino sketches, add the line **build_flags=-DARDUINO_BASE** to the platformio.ini configuration file. You can now compile for Arduino.<br>
 
-When developing a new Arduino sketch you must also show the sketch where pdulib is located. In a classical PlatformIO layout, library files are located in the pdulib/examples/sketch/lib/pdulib folder. In reality they are in the pdulib/src folder. To overcome this, create the folder pdulib/examples/sketch/lib/pdulib and create soft links from there to the actual source files.
+When developing a new Arduino sketch you must also show the sketch where pdulib is located. In a classical PlatformIO layout, library files are located in the pdulib/examples/sketch/lib/pdulib folder. In reality they are in the pdulib/src folder. To overcome this, create the folder pdulib/examples/sketch/lib/pdulib and create soft links from there to the actual source files.<br>
+The script **createSoftLinks.sh** does this automagically for all the examples.
 ```
 cd pdulib/examples/sketch/lib
 mkdir pdulib
