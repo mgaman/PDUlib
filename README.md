@@ -42,7 +42,8 @@ This returns the address of the buffer created by **encodePDU**. The buffer alre
 # Development and Debugging
 The code was developed in VS Code and Ubuntu desktop environment.  
 There are a few differences between the VS Code environment and the Arduino IDE which is the default mode for many Arduino developers. The main difference is the file name of an Arduino sketch. In VS Code this is a classical C++ file with the extension **cpp** e.g. **anyName.cpp**. In Arduino IDE the extension is **ino** and the leading part of the name **must** be the same as that of the folder enclosing the sketch e.g. for a sketch called **blah** the sketch folder is **blah** and the sketch file name **blah.ino**.  
-I have constructed the source tree so that it is valid for both Arduino IDE and PlatformIO environments. For example the files **pdulib/examples/Decode/Decode.ino** and **pdulib/examples/Decode/src/Decode.cpp** are identical but with different names and location.<br>
+I have constructed the source tree so that it is valid for both Arduino IDE and PlatformIO environments. For example the files **pdulib/examples/Decode/Decode.ino** and **pdulib/examples/Decode/src/Decode.c++** are identical but with different names and location.<br>
+I use the extension c++ to prevent the Arduino IDE compiling both ino and any cpp files it finds. PlatformIO will happily compile c++ files.<br> 
 Arduino has its own peculiarities for the location of library header files. It folds many standard libraries into **Arduino.h** whereas the Desktop user has to name them specifically. This is the reason behind the **ARDUINO_BASE** macro. 
 ```
 #ifdef ARDUINO_BASE
