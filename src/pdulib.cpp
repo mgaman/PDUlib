@@ -17,6 +17,8 @@
  * 0.4.4 Fixed getSCAnumber bug (again)
  *       Replaced buildUtf16 helper by buildUtf (good for any codepoint)
  *       Fixed incorrect handling of special characters in ALPHABET_7BIT situation
+ * 0.4.6 Make source tree Arduino/PlatformIO compatible (no source changes)
+ * 0.4.7 Fixed issue with PM macro/Arduino
  */
 
 #define ARDUINO_BASE   // uncomment for Arduino
@@ -28,8 +30,6 @@
 #endif
 #include <ctype.h>
 #include <pdulib.h>
-
-//#define DIRECT
 
 PDU::PDU(){}
 PDU::~PDU(){}
@@ -316,12 +316,12 @@ int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
   for (r = 0; r<length; r++) {
 #ifdef PM
       if ((pgm_read_byte(lookup_ascii7to8 + a7bit[r]) != 27)) {
-        ascii[w++] = pgm_read_byte(lookup_ascii7to8 + (unsigned char)a7bit[r]);
+        const unsigned char C = pgm_read_byte(lookup_ascii7to8 + (unsigned char)a7bit[r]);
 #else
       if ((lookup_ascii7to8[(unsigned char)a7bit[r]]) != 27) {
-//        ascii[w++] = lookup_ascii7to8[(unsigned char)a7bit[r]];
-        w += buildUtf(lookup_ascii7to8[(unsigned char)a7bit[r]],&ascii[w]);
+        const unsigned char C = lookup_ascii7to8[(unsigned char)a7bit[r]];
 #endif
+        w += buildUtf(C,&ascii[w]);
     }
     else {
       /* If we're escaped then the next uint8_t have a special meaning. */

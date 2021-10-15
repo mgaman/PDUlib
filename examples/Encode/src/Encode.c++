@@ -19,8 +19,13 @@ char final[50];
 #define EURO 0x20AC  // gsm escape
 void setup() {
   Serial.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
   GSM.begin(9600);
-  mypdu.setSCAnumber("+97254120032");
+  mypdu.setSCAnumber("+*********");
   strcpy(final,"hello");
   mypdu.buildUtf(ZERO,temp);
   strcat(final,temp);
@@ -43,7 +48,7 @@ void setup() {
   mypdu.buildUtf(EURO,temp);
   strcat(final,temp);
   strcat(final,"שלום");
-  int len = mypdu.encodePDU("0545919886",final);
+  int len = mypdu.encodePDU("********",final);
   sprintf(temp,"AT+CMGS=%d\r",len);
   Serial.print("SMS length ");Serial.println(len);
   Serial.println(mypdu.getSMS());

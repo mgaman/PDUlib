@@ -17,16 +17,16 @@ void setup() {
 }
 
 void processLine() {
-//  Serial.print(linebuf);
-  if (strncmp("+CMT:",linebuf,5) == 0) {
-    nextLinePDU = true;
-  }
-  else if (nextLinePDU) {
+  Serial.print(linebuf);
+  if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
       Serial.print("From: "); Serial.println(mypdu.getSender());
       Serial.print("Msg: "); Serial.println(mypdu.getText());
     }
     nextLinePDU = false;
+  }
+  else if (strncmp("+CMT:",linebuf,5) == 0) {
+    nextLinePDU = true;
   }
   inCount = 0;  
 }
