@@ -2,9 +2,9 @@
 dirs='examples/Decode examples/Encode examples/Incoming'
 if [ $# -gt 0 ]
 then
-	crdirs=true
-else
 	crdirs=false
+else
+	crdirs=true
 fi
 #echo $crdirs
 current=$PWD
