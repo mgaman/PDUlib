@@ -415,7 +415,6 @@ bool PDU::decodePDU(const char *pdu){
     return false;
   }
   index = i+4; // skip over SCA length and atn
-  pduType = gethex(&pdu[index]);
   index += 2;       // skip over SMS deliver
   i = decodeAddress(&pdu[index],addressBuff,NIBBLES);
   if (i==0) {
@@ -438,12 +437,6 @@ bool PDU::decodePDU(const char *pdu){
   // decode the actual data
   int dulength = gethex(&pdu[index]);
   index += 2;
-  // decode udh
-  if (pduType & UDH_EXIST) {
-    i = decodeUDH(&pdu[index]);
-    index += i; // skip over UDH
-    dulength -= i / 2;
-  }
   int utflength = 0,utfoffset;
   unsigned short ucs2;
   *mesbuff = 0;
@@ -656,9 +649,6 @@ const char *PDU::getTimeStamp() {
 const char *PDU::getText() {
   return mesbuff;
 }
-const UDH *PDU::getUDH() {
-  return pduType & UDH_EXIST ? &udh : NULL;
-}
 
 
 void PDU::BCDtoString(char *output, const char *input,int length) {
@@ -714,24 +704,6 @@ int PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to
     addressLength = 0; // dont know how to handle EXT
   }
   return addressLength;
-}
-
-int PDU::decodeUDH(const char *pdu) {
-  int length = gethex(pdu);
-  pdu += 2;
-  udh.iei = gethex(pdu);
-  pdu += 2;
-  pdu += 2; // skip over IEL
-  udh.ied.number = gethex(pdu);
-  pdu += 2;
-  if (udh.iei == IEI_CSM_16) {
-    udh.ied.number << 8;
-    udh.ied.number += gethex(pdu);
-    pdu += 2;
-  }
-  udh.ied.total = gethex(pdu);
-  udh.ied.part = gethex(pdu + 2);
-  return (length + 1) * 2;
 }
 
 int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero terminated string
