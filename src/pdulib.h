@@ -44,13 +44,6 @@
 #define INTERNATIONAL_NUMBER 0x91
 #define NATIONAL_NUMBER 0xA1
 
-// UDH bits
-#define UDH_EXIST 64
-
-// IEI
-#define IEI_CSM_8 0x00
-#define IEI_CSM_16 0x08
-
 #define EXT_MASK 0x80   // bit 7
 #define TON_MASK 0x70   // bits 4-6
 #define TON_OFFSET 4
@@ -69,20 +62,6 @@
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
 enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
-
-// wiki: https://en.wikipedia.org/wiki/Concatenated_SMS
-struct IED {
-  unsigned short number;
-  unsigned char total;
-  unsigned char part;
-};
-
-// wiki: https://en.wikipedia.org/wiki/User_Data_Header
-struct UDH {
-  unsigned char iei;
-  IED ied;
-};
-
 /**
  * @brief PDU class, provides methods to decode a PDU message or encode a new one
  * @param None There are no parameters for the constructor
@@ -150,12 +129,6 @@ public:
    */
   const char *getText();
   /**
-   * @brief Get the user data header.
-   * 
-   * @return const UDH* The user data header.
-   */
-  const UDH *getUDH();
-  /**
    * @brief Create a UTF16 string from a codepoint > 0xffff
    * 
    * @param codepoint Examples https://unicode.org/emoji/charts/full-emoji-list.html
@@ -177,8 +150,6 @@ private:
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
   int meslength;
   char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
-  unsigned char pduType;
-  UDH udh;
   int tslength;
   char tsbuff[20];    // big enough for timestamp
   char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
@@ -211,7 +182,6 @@ private:
   // get length of next utf8
   int utf8Length(const char *);
   int decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
-  int decodeUDH(const char *);
   bool setAddress(const char *,eAddressType,eLengthType);
 //  //  Get SCA number for outgoing SMS
 //  const char *getMySCAnumber();
