@@ -9,3 +9,8 @@ examples/Decode/lib
 examples/Encode/lib
 examples/Incoming/lib
 
+DesktopExample/src/consoleHandler.o
+DesktopExample/src/phonetester.o
+DesktopExample/src/serialHandler.o
+DesktopExample/src/startup.o
+DesktopExample/src/unsolicited.o
