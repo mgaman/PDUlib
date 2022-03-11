@@ -6,6 +6,7 @@ using std::setw;
 #include <pdulib.h>
 
 char *gsm7 =
+#if 1
 "@£$¥èéùìòÇ Øø åÅ"
 "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
 " !\"#¤%&'()*+,-./"
@@ -16,6 +17,9 @@ char *gsm7 =
 "pqrstuvwxyzäöñüà"
 "^{}[]\\~|€"   // escaped symbols 
 "א";
+#else
+"€א";
+#endif
 
 char ucs2[512];
 #if 0

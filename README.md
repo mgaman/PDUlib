@@ -3,8 +3,9 @@
 # PDUlib
 Encode/Decode PDU for sending/receiving SMS.
 ## Alphabets
-Both the GSM 7 bit alphabet and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want.  
-BTW Emojis can also be sent.  The Arduino IDE does not support inserting emojis into text. The VS Code user should install the Emoji plugin.
+Both the default GSM 7 bit alphabet and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want. 
+BTW Emojis can also be sent.  The Arduino IDE does not support inserting emojis into text. The VS Code user should install the Emoji plugin.  
+NOTE Language extensions of the GSM 7 bit alphabet e.g. Spanish are not supported yet. The default GSM 7 bit alphabet contains latin characters plus some letters with accents. Also 10 upper case Greek characters. To handle language extensions I need to process the SMS UDH (User Data Header) block. Watch this space.
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
 # API

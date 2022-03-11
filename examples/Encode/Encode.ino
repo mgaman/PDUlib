@@ -19,8 +19,13 @@ char final[50];
 #define EURO 0x20AC  // gsm escape
 void setup() {
   Serial.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
   GSM.begin(9600);
-  mypdu.setSCAnumber("+********");
+  mypdu.setSCAnumber("+*********");
   strcpy(final,"hello");
   mypdu.buildUtf(ZERO,temp);
   strcat(final,temp);

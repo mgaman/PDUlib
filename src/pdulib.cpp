@@ -343,7 +343,11 @@ int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
       if (C != NPC8)
         w += buildUtf(C, &ascii[w]);
       else {
+#ifdef PM
+        unsigned short S = pgm_read_word(lookup_Greek7ToUnicode + (a7bit[r]-16));
+#else
         unsigned short S = lookup_Greek7ToUnicode[a7bit[r]-16];
+#endif
         w += buildUtf(S, &ascii[w]);
       }
     }
@@ -821,7 +825,11 @@ int PDU::buildUtf(unsigned long cp, char *target) {
 
 bool PDU::isGSM7(unsigned short ucs) {
   for (int i=0; i< sizeof(gsm7_legal)/sizeof(sRange);i++) {
+  #ifdef PM
+    if (ucs >= pgm_read_word(&gsm7_legal[i].min) && ucs <= pgm_read_word(&gsm7_legal[i].max))
+  #else
     if (ucs >= gsm7_legal[i].min && ucs <= gsm7_legal[i].max)
+  #endif
       return true;
   }
   return false;
