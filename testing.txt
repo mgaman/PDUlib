@@ -1,7 +1,44 @@
 Features to test
 
+https://en.wikipedia.org/wiki/GSM_03.38
+
 Encoding and Decoding
-    1. GSM 7 bit alphabet should be sent as 7 bit. Escape characters handled.
-    2. UCS2 cover all ranges < 0x7ff, < 0xffff and surrogate pairs
+    1. Only GSM 7-bit default alphabet and extension table 3GPP TS 23.038 supported.
+        1.1 National language shift tables not supported as UDH section not supported.
+    2. GSM 7 bit alphabet should be sent as 7 bit. Escape characters handled.
+        2.1 Decode all 255 characters in 7-bit including upper case greek and latin diacritic
+    3. UCS2 cover all ranges < 0x7ff, < 0xffff and surrogate pairs
+
 SCA and Sender/Destination Numbers.
     1. Local and international, odd length and even length.
+
+Unicode Characters > 255 that are included in GSM 7-bit
+pound sterling
+yen
+a grave
+e grave
+e acute lower/upper
+u grave
+o grave
+Cap C cidilla
+Scandinavian O upper /lower case
+Scandinavian A upper /lower case
+Upper case Greek Delta Phi Gamma Lambda Omega Pi Psi Sigma That Xi
+Latin AE upper/lower
+German sharfes
+unspecified currency
+A umlaut upper/lower
+O umlaut upper/lower
+N tilde upper/lower
+U umlaut upper/lower
+section
+inverted question mark/ exclamation
+
+@£$¥èéùìòÇØøåÅ
+Δ_ΦΓΛΩΠΨΣΘΞÆæßÉ
+!"#¤%&'()*+,-./
+0123456789:;<=>?
+¡ABCDEFGHIJKLMNO
+PQRSTUVWXYZÄÖÑÜ§
+¿abcdefghijklmno
+pqrstuvwxyzäöñüà

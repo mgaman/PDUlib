@@ -14,3 +14,8 @@ DesktopExample/src/phonetester.o
 DesktopExample/src/serialHandler.o
 DesktopExample/src/startup.o
 DesktopExample/src/unsolicited.o
+DesktopExample/src/greekDecode.o
+DesktopExample/src/gsm7check.o
+src/ucs2.txt
+output/main
+main.map

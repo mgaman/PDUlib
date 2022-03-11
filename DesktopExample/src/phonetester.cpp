@@ -35,13 +35,21 @@ void consoleHandler(int sp);
 // is undefined
 PDU mypdu = PDU();
 
+// prototypes
+void greekDecode(PDU);
+void gsm7check(PDU);
+
+
 // Check for errors
 int main(int argc, char *argv[]) {
+    // here is the space to run tests in desktop mode
+    //greekDecode(mypdu);
+    gsm7check(mypdu);
+    ///////////////////////////////////////////////
     if (argc != 2) {
         std::cout <<"Usage: pduapp serial_port\n\n";
         return 1;
     }
-
     std::cout << argv[1] << std::endl; 
     serial_port = open(argv[1], O_RDWR);
     if (serial_port < 0) 
