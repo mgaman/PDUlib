@@ -9,7 +9,7 @@
  * 
  * Release History
  * 0.1.1 Original release
- * 0.1.2 Add lookup_Greek7ToUnicode table
+ * 0.1.2 Add lookup_Greek7ToUnicode and lookup_UnicodeToGreek7 tables
  *       static lookup tables moved to pdulib.cpp
  * 
  */
@@ -54,6 +54,7 @@
 #define NPI_MASK 0x0f   // bits 0-3
 
 #define MAX_SMS_LENGTH_7BIT 160 // GSM 3.4
+#define MAX_NUMBER_OCTETS 140
 #define MAX_NUMBER_LENGTH 20    // gets packed into BCD or packed 7 bit
 
 //SCA (12) + type + mref + address(12) + pid + dcs + length + data(140) -- no valtime
@@ -62,6 +63,8 @@
  /* Define Non-Printable Characters as a question mark */
 #define NPC7    63
 #define NPC8    '?'
+
+#define EURO_UCS 0x20AC
 
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
 enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
@@ -147,6 +150,13 @@ public:
    */
   int buildUtf(unsigned long codepoint, char *target); // build a string from a codepoint
   int utf8_to_ucs2_single(const char *utf8, short *ucs2);  // translate to a single ucs2
+  /**
+   * @brief Convert a UTF8 string into an array of UCS2 octets
+   * 
+   * @param utf8 The UTF8 string
+   * @param ucs2 Pointer to UCS2 array
+   * @return int Return the number of octets, -1 if the message is greater than the maximum allowed
+   */
   int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
   bool isGSM7(unsigned short ucs);
 private:
@@ -171,7 +181,7 @@ private:
   void BCDtoString(char *number, const char *pdu,int length);
   void digitSwap(const char *number, char *pdu);
   
-  int utf8_to_packed7bit(const char *utf8, char *pdu);
+  int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets);
   int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
 
   int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit);
@@ -212,6 +222,14 @@ extern const
 #endif
               unsigned short lookup_Greek7ToUnicode[];
 #endif
+
+#define GREEK_UCS_MINIMUM 0x393
+extern const
+#ifdef PM
+      PROGMEM
+#endif
+        unsigned short lookup_UnicodeToGreek7[];
+
 struct sRange {
   unsigned short min,max;
 };

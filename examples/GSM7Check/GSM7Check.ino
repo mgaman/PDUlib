@@ -35,7 +35,6 @@ void loop() {
     int numoctets = mypdu.utf8_to_ucs2(gsm7,ucs2);
     sprintf(printbuf,"Found %d octets",numoctets);
     Serial.println(printbuf);
-    // UCS2 is a bigendian number, we need to convert to little endian
     unsigned char *source = (unsigned char *) ucs2;
     unsigned short target;
     for (int i=0; i<numoctets/2;i++) {

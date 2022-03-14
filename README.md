@@ -3,9 +3,9 @@
 # PDUlib
 Encode/Decode PDU for sending/receiving SMS.
 ## Alphabets
-Both the default GSM 7 bit alphabet and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want. 
+Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want. 
 BTW Emojis can also be sent.  The Arduino IDE does not support inserting emojis into text. The VS Code user should install the Emoji plugin.  
-NOTE Language extensions of the GSM 7 bit alphabet e.g. Spanish are not supported yet. The default GSM 7 bit alphabet contains latin characters plus some letters with accents. Also 10 upper case Greek characters. To handle language extensions I need to process the SMS UDH (User Data Header) block. Watch this space.
+This implementation does not process the User Data Header (UDH). The practical implication of this is that concatenated messages or national language extensions are not supported.
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
 # API
@@ -31,7 +31,8 @@ Returns the body of an incoming message. Note that it is a UTF-8 string. In a De
 <b>int encodePDU(const char *recipient,const char *message)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
-3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/) 
+3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/)  
+A return value of -1 indicates that the message is longer than the maximum allowed.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
 Before one can encode and send a PDU the number of the Service Centre must be known.  
@@ -225,3 +226,10 @@ void loop() {
     Serial.write(GSM.read());
 }
 ```
+
+# How many characters can I send?
+The common misconception is that a single SMS can contain up to 160 characters. This does not take into account
+the definition of a character.  
+The space available for a message in a PDU is 140 bytes or 1120 bits. For a 7 bit character, or septet, there is thus
+space for 1120/7 = 160 characters. For 16 bits characters (anything not GSM 7) there is space for 1120/16 = 70 characters.  
+Furthermore, in GSM7, there are a number of escaped characters e.g. [ and ]. These take up 2 septets out of the allowed 160.

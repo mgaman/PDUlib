@@ -38,13 +38,15 @@ PDU mypdu = PDU();
 // prototypes
 void greekDecode(PDU);
 void gsm7check(PDU);
+void gsm7encode(PDU);
 
 
 // Check for errors
 int main(int argc, char *argv[]) {
     // here is the space to run tests in desktop mode
     //greekDecode(mypdu);
-    gsm7check(mypdu);
+    //gsm7check(mypdu);
+    //gsm7encode(mypdu);
     ///////////////////////////////////////////////
     if (argc != 2) {
         std::cout <<"Usage: pduapp serial_port\n\n";

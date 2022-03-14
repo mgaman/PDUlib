@@ -6,7 +6,7 @@
 
 #include "pdulib.h"
 
-std::string menu = "Menu\n" "  [sStT] send sms\n";
+std::string menu = "Menu\n" "  [012345] send sms\n";
 void sendSMS(int sp,int i);
 void consoleHandler(int sp) {
     char linein[10];
@@ -14,17 +14,14 @@ void consoleHandler(int sp) {
     while (true) {
         std::cin.getline(linein,sizeof(linein));
         switch (linein[0]) {
-            case 's':
-                sendSMS(sp,0);
-                break;
-            case 'S':
-                sendSMS(sp,1);
-                break;
-            case 't':
-                sendSMS(sp,2);
-                break;
-            case 'T':
-                sendSMS(sp,3);
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+//            case '6':
+                sendSMS(sp,linein[0]-'0');
                 break;
             default:
                 std::cout << menu;
@@ -34,22 +31,36 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *to = "**********";   // place destination phonr number here
-const char *sca = "*********";   // place your SCA number here
+const char *to = "0545919886";   // place destination phone number here
+const char *sca =  "+336110000331400";   // place your SCA number here
 const char *message[] = {
-  "שלום012345678901234567890123456789abcdefABCDEFGHIJ0123456789ABCDEFGHIJ",  // GSM 16 bit
-  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234", // all ascii
-  "J£mjòø",   // GSM 7 bit 
-  "abcd🍖😃אבגד"  // surrogate pairs
-  };
+  "0123456789ABCDEFGHIJ0123456789ABCDEFGHIJ0123456789ABCDEFGHIJאבגד",  // GSM 16 bit
+  "abcd🍖😃אבגד",  // surrogate pairs
+  "@£$¥èéùìòÇ Øø åÅ"  // gsm 7 BIT
+  "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
+  " !\"#¤%&'()*+,-./"
+  "0123456789:;<=>?"
+  "¡ABCDEFGHIJKLMNO"
+  "PQRSTUVWXYZÄÖÑÜ§"
+  "¿abcdefghijklmno"
+  "pqrstuvwxyzäöñüà"
+  "^{}[]\\~|€",    // GSM 7 bit escaped
+  "{}",
+  "12345678",   // 8 gsm 7 bit
+  "1234567",   // 7 gsm 7 bit
+};
 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp, int i) {
   mypdu.setSCAnumber(sca);
   int len = mypdu.encodePDU(to,message[i]);
-  sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
-  write(sp,writeBuf,strlen(writeBuf));
+  if (len == -1)
+    std::cout << "Message too long\n";
+  else {
+    sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
+    write(sp,writeBuf,strlen(writeBuf));
     // should wait for ">" but just do a delay instead
-  sleep(1);
-  write(sp,mypdu.getSMS(),strlen(mypdu.getSMS()));
+    sleep(1);
+    write(sp,mypdu.getSMS(),strlen(mypdu.getSMS()));
+  }
 } 
