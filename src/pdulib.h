@@ -65,6 +65,8 @@
 #define NPC8    '?'
 
 #define EURO_UCS 0x20AC
+//#define SURROGATE_PAIR 0xD800
+
 
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
 enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
@@ -87,12 +89,14 @@ public:
  * @return int The length of the message, need for the GSM command <b>AT+CSMG=nn</b>
  */
   int encodePDU(const char *recipient,const char *message);
-  /**
+
+/**
    * @brief Get the address of the PDU message created by <b>encodePDU</b>
    * 
    * @return const char* The pointer to the message. It already contained the CTRL/Z delimiter byte.
    */
   const char *getSMS();
+
 /**
  * @brief Before encoding a PDU, you must supply the SCA phone number.
  * Typically this can be retrieved from a GSM modem with the AT+CSCA? command.
@@ -101,6 +105,7 @@ public:
  * 
  */
   void setSCAnumber(const char *number);
+
   /**
    * @brief Decode a PDU, typically received from a GSM modem when in PDU mode.
    * After a successful decoding you can retrieve the components parts, described below.
@@ -110,31 +115,35 @@ public:
    * @return false If the decoding did not succeed.
    */
   bool decodePDU(const char *pdu);
-  //const char *getSCA();
+
   /**
    * @brief Get the SCA number from a decoded PDU
    * 
    * @return char* Pointer to the number
    */
   const char *getSCAnumber();
+
   /**
    * @brief Get the senders phone number from a decoded PDU
    * 
    * @return const char* Pointer to the number
    */
   const char *getSender();
+
   /**
    * @brief Get the Timestamp from a decoded PDU
    * 
    * @return const char* The tomestamp formatted as YYYMMDDHHMMSS
    */
   const char *getTimeStamp();
+
   /**
    * @brief Get the text froma a decoded PDU.
    * 
    * @return const unsigned char* The message in UTF-8 format.
    */
   const char *getText();
+
   /**
    * @brief Create a UTF16 string from a codepoint > 0xffff
    * 
@@ -142,6 +151,7 @@ public:
    * @param target Where to place the string
    */
   void buildUtf16(unsigned long codepoint, char *target); // build a string from a codepoint
+
   /**
    * @brief Create a UTF string from a codepoint. Handles practically anything
    * 
@@ -149,7 +159,7 @@ public:
    * @param target Where to place the string
    */
   int buildUtf(unsigned long codepoint, char *target); // build a string from a codepoint
-  int utf8_to_ucs2_single(const char *utf8, short *ucs2);  // translate to a single ucs2
+
   /**
    * @brief Convert a UTF8 string into an array of UCS2 octets
    * 
@@ -157,8 +167,31 @@ public:
    * @param ucs2 Pointer to UCS2 array
    * @return int Return the number of octets, -1 if the message is greater than the maximum allowed
    */
-  int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
-  bool isGSM7(unsigned short ucs);
+  int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string 
+
+  /**
+   * @brief Examine an array of UCS2 to determine if this is a default GSM7 character
+   * 
+   * @param pucs A UCS2 array e.g. as created by the utf8_to_ucs2_single method
+   * @return true or false
+   */
+  bool isGSM7(unsigned short *pucs);  // UCS may be a surrogate pair
+
+  /**
+   * @brief Examine a UTF8 encoded Unicode character
+   * 
+   * @return The number of bytes (octets) occupied by the character
+   */
+  int utf8Length(const char *);
+
+  /**
+   * @brief Encode a single UTF8 encoded Unicode character into UCS2 format. 
+   * 
+   * @param utf8 Pointer to an UTF8 stream
+   * @param pucs2 An array of unsigned short to receive the UCS2 data. Surrogate pair characters need an array size of 2.
+   * @return int The length (in bytes) of the converted character. This will be 4 for a Surrogate Pair (e.g an Emoji) else 2.
+   */
+  int utf8_to_ucs2_single(const char *utf8, unsigned short *pucs2);  // translate to a single ucs2
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -175,7 +208,6 @@ private:
   int smsOffset;
   char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
   // helper methods
-  //bool setMessage(const char *message,eDCS);
 
   void stringToBCD(const char *number, char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
@@ -194,12 +226,14 @@ private:
   // callers responsibilty that utf8 array is big enough
   int ucs2_to_utf8(unsigned short ucs2, char *utf8);
   // callers responsibilty that ucs2 array is big enough
-//  int utf8_to_ucs2_single(const char *utf8, short *ucs2);  // translate to a single ucs2
+ // int utf8_to_ucs2_single(const char *utf8, unsigned short *ucs2);  // translate to a single ucs2
 //  int utf8_to_ucs2(const char *utf8, char *ucs2);  // translate an utf8 zero terminated string
   // get length of next utf8
-  int utf8Length(const char *);
+//  int utf8Length(const char *);
   int decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
   bool setAddress(const char *,eAddressType,eLengthType);
+//  bool isGSM7(unsigned short *pucs);  // UCS may be a surrogate pair
+
 //  //  Get SCA number for outgoing SMS
 //  const char *getMySCAnumber();
 };

@@ -142,9 +142,9 @@ int PDU::convert_utf8_to_gsm7bit(const char *message, char *a7bit) {
   while (*message) {
     // sanity check against overflow
     int length = utf8Length(message);
-    unsigned short ucs2,target;
-    utf8_to_ucs2_single(message,(short *)&ucs2);
-    target = (ucs2 << 8) | ((ucs2 & 0xff00) >> 8); // swap endian
+    unsigned short ucs2[2],target;  // allow for surrogate pair
+    utf8_to_ucs2_single(message,ucs2);
+    target = (ucs2[0] << 8) | ((ucs2[0] & 0xff00) >> 8); // swap endian
     /*
       Handle special cases, code a bit convoluted caused by the need to
       keep translate tables as small as possible
@@ -230,12 +230,12 @@ int PDU::encodePDU(const char *recipient, const char *message)
   bool gsm7bit = true;
   const char *savem = message;
   while (*message && gsm7bit) {
-    unsigned short ucs2,target;
+    unsigned short ucs2[2],target;  // allow for surrogate pair
     int length = utf8Length(message);
-    utf8_to_ucs2_single(message, (short *)&ucs2);  // translate to a single ucs2
+    utf8_to_ucs2_single(message, ucs2);  // translate to a single ucs2
     // ucs2 is bigendian, swap to little endian
-    target = (ucs2 << 8) | ((ucs2 & 0xff00)>> 8);
-    gsm7bit = isGSM7(target);
+    target = (ucs2[0] << 8) | ((ucs2[0] & 0xff00)>> 8);
+    gsm7bit = isGSM7(&target);
     message += length;  // bump to next
   }
   if (!gsm7bit)
@@ -550,7 +550,7 @@ int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
       
       return 2;
   }
-  else if ((ucs2 & 0xff00) == 0xD800) {   // start of surrogate pair
+  else if ((ucs2 & 0xff00) >= 0xD800 && ((ucs2 & 0xff00) <= 0xDB00) ) {   // start of surrogate pair
     SPstart = true;
     spair[0] = ucs2;
   }
@@ -601,7 +601,9 @@ int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
 
   return 0;
 }
-
+/*
+   return number of bytes used by this UTF8 unicode character
+*/
 int PDU::utf8Length(const char *utf8) {
     int length = 1;
     unsigned char mask = BITS76ON;
@@ -637,7 +639,7 @@ int PDU::utf8Length(const char *utf8) {
     Correction: Allow for the creation of surrogate pairs
     If the input character is in the range 0x10000 to 0x10ffff, convert into a pair of UCS2 words
 */
-int PDU::utf8_to_ucs2_single(const char *utf8, short *target) {
+int PDU::utf8_to_ucs2_single(const char *utf8, unsigned short *target) {
     unsigned short ucs2[2];
     int numbytes = 0;
     int cont = utf8Length(utf8)-1; // number of continuation bytes
@@ -749,7 +751,7 @@ int PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to
 */
 int PDU::utf8_to_ucs2(const char *utf8, char *ucs2) {  // translate an utf8 zero terminated string
   int octets=0,ucslength;
-  short tempucs2[2]; // allow space for surrogate pair
+  unsigned short tempucs2[2]; // allow space for surrogate pair
   while (*utf8 && octets <= MAX_NUMBER_OCTETS) {
     int inputlen = utf8Length(utf8);
 //    int ucslength = utf8_to_ucs2_single(utf8,(short *)ucs2);
@@ -843,12 +845,12 @@ int PDU::buildUtf(unsigned long cp, char *target) {
    return strlen(target);
 }
 
-bool PDU::isGSM7(unsigned short ucs) {
+bool PDU::isGSM7(unsigned short *pucs) {
   for (unsigned int i=0; i< sizeof(gsm7_legal)/sizeof(sRange);i++) {
   #ifdef PM
-    if (ucs >= pgm_read_word(&gsm7_legal[i].min) && ucs <= pgm_read_word(&gsm7_legal[i].max))
+    if (*pucs >= pgm_read_word(&gsm7_legal[i].min) && *pucs <= pgm_read_word(&gsm7_legal[i].max))
   #else
-    if (ucs >= gsm7_legal[i].min && ucs <= gsm7_legal[i].max)
+    if (*pucs >= gsm7_legal[i].min && *pucs <= gsm7_legal[i].max)
   #endif
       return true;
   }

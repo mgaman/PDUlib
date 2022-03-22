@@ -17,7 +17,7 @@ void setup() {
 }
 
 void processLine() {
-  Serial.print(linebuf);
+  //Serial.print(linebuf);
   if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
       Serial.print("From: "); Serial.println(mypdu.getSender());
@@ -33,6 +33,7 @@ void processLine() {
 void loop() {
   while (GSM.available()) {
     byte b = GSM.read();
+    //Serial.print(b,HEX);
     linebuf[inCount++] = b;
     if (inCount == BUF_SIZE) {
       Serial.println("buffer overflow");

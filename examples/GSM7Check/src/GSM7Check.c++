@@ -11,7 +11,7 @@ char *gsm7 =
 "¿abcdefghijklmno"
 "pqrstuvwxyzäöñüà"
 "^{}[]\\~|€"   // escaped symbols 
-"א"  // not gsm7
+//"א"  // not gsm7
 ;
 
 PDU mypdu;
