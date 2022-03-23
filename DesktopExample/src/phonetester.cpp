@@ -45,7 +45,7 @@ void gsm7encode(PDU);
 int main(int argc, char *argv[]) {
     // here is the space to run tests in desktop mode
     //greekDecode(mypdu);
-    gsm7check(mypdu);
+    //gsm7check(mypdu);
     //gsm7encode(mypdu);
     ///////////////////////////////////////////////
     if (argc != 2) {

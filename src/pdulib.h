@@ -9,9 +9,9 @@
  * 
  * Release History
  * 0.1.1 Original release
- * 0.1.2 Add lookup_Greek7ToUnicode and lookup_UnicodeToGreek7 tables
- *       static lookup tables moved to pdulib.cpp
- * 
+ * 0.5.1 Fixed bug where Greek characters in a GSM7 message were ignored
+ *       Fixed bad behaviour where static lookup tables were duplicated (moved to pdulib.cpp)
+ *       Default GSM7 now fully supported
  */
 
 

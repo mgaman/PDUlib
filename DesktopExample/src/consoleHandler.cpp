@@ -5,6 +5,7 @@
 #include <unistd.h> // write(), read(), close()
 
 #include "pdulib.h"
+#include "config.h"
 
 std::string menu = "Menu\n" "  [012345] send sms\n";
 void sendSMS(int sp,int i);
@@ -20,7 +21,6 @@ void consoleHandler(int sp) {
             case '3':
             case '4':
             case '5':
-//            case '6':
                 sendSMS(sp,linein[0]-'0');
                 break;
             default:
@@ -31,8 +31,6 @@ void consoleHandler(int sp) {
 
 extern PDU mypdu;
 
-const char *to = "0545919886";   // place destination phone number here
-const char *sca =  "+336110000331400";   // place your SCA number here
 const char *message[] = {
   "0123456789ABCDEFGHIJ0123456789ABCDEFGHIJ0123456789ABCDEFGHIJאבגד",  // GSM 16 bit
   "abcd🍖😃אבגד",  // surrogate pairs
@@ -52,8 +50,8 @@ const char *message[] = {
 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp, int i) {
-  mypdu.setSCAnumber(sca);
-  int len = mypdu.encodePDU(to,message[i]);
+  mypdu.setSCAnumber(SCAnumber);
+  int len = mypdu.encodePDU(Target,message[i]);
   if (len == -1)
     std::cout << "Message too long\n";
   else {

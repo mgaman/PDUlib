@@ -12,27 +12,34 @@ bool nextLinePDU = false;
 
 void setup() {
   Serial.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
+
   GSM.begin(9600);
   Serial.println("Send me text messages.. now  ");
 }
 
 void processLine() {
-//  Serial.print(linebuf);
-  if (strncmp("+CMT:",linebuf,5) == 0) {
-    nextLinePDU = true;
-  }
-  else if (nextLinePDU) {
+  //Serial.print(linebuf);
+  if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
       Serial.print("From: "); Serial.println(mypdu.getSender());
       Serial.print("Msg: "); Serial.println(mypdu.getText());
     }
     nextLinePDU = false;
   }
+  else if (strncmp("+CMT:",linebuf,5) == 0) {
+    nextLinePDU = true;
+  }
   inCount = 0;  
 }
 void loop() {
   while (GSM.available()) {
     byte b = GSM.read();
+    //Serial.print(b,HEX);
     linebuf[inCount++] = b;
     if (inCount == BUF_SIZE) {
       Serial.println("buffer overflow");

@@ -1,11 +1,11 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <pdulib.h>
+#include "config.h"
 
 SoftwareSerial GSM(2,3);
 PDU mypdu = PDU();
 char temp[30];
-char final[50];
 
 #define ZERO 48    // 7 bit
 #define YEN 165    // 16 bit
@@ -17,47 +17,90 @@ char final[50];
 #define LEFT_SQUARE  91 // GSM escape
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
+
+#define DO_ALL_GSM7  // Either print GSM7 characters or UTF16 characters
+#define PART0      // GSM7 example too large for UNO so split into 2 parts
+
+#ifdef DO_ALL_GSM7
+
+const char *final =
+#ifdef PART0
+  "@£$¥èéùìòÇ Øø åÅ"
+  "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
+  " !\"#¤%&'()*+,-./"
+  "0123456789:;<=>?"
+#else
+  "¡ABCDEFGHIJKLMNO"
+  "PQRSTUVWXYZÄÖÑÜ§"
+  "¿abcdefghijklmno"
+  "pqrstuvwxyzäöñüà"
+  "^{}[]\\~|€"   // escaped symbols
+#endif
+;
+#else
+char final[70];
+#endif
+
+bool runOnce = true;
+bool gotGT = false;
+
 void setup() {
   Serial.begin(9600);
+  GSM.begin(9600);
 #ifdef PM
   Serial.println("Using PM");
 #else
   Serial.println("Not using PM");
 #endif
-  GSM.begin(9600);
-  mypdu.setSCAnumber("+*********");
-  strcpy(final,"hello");
-  mypdu.buildUtf(ZERO,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(YEN,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(ALEPH,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(SPADE,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(ACE_OF_SPADES,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(SMILEY,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(POUND,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(LEFT_SQUARE,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(RIGHT_SQUARE,temp);
-  strcat(final,temp);
-  mypdu.buildUtf(EURO,temp);
-  strcat(final,temp);
-  strcat(final,"שלום");
-  int len = mypdu.encodePDU("********",final);
-  sprintf(temp,"AT+CMGS=%d\r",len);
-  Serial.print("SMS length ");Serial.println(len);
-  Serial.println(mypdu.getSMS());
-  GSM.print(temp);
-  delay(1000);
-  GSM.print(mypdu.getSMS());
 }
 
 void loop() {
-  while (GSM.available())
-    Serial.write(GSM.read());
+  if (runOnce) {
+    //GSM.println("ATE0");   // turn off echo on modem
+    runOnce = false;
+    mypdu.setSCAnumber(SCAnumber);
+#ifndef DO_ALL_GSM7
+    strcpy(final,"hello");
+    mypdu.buildUtf(ZERO,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(YEN,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(ALEPH,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(SPADE,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(ACE_OF_SPADES,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(SMILEY,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(POUND,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(LEFT_SQUARE,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(RIGHT_SQUARE,temp);
+    strcat(final,temp);
+    mypdu.buildUtf(EURO,temp);
+    strcat(final,temp);
+    strcat(final,"שלום");
+#endif
+    int len = mypdu.encodePDU(Target,final);
+    if (len == -1) {
+      Serial.println("Message too long");
+    }
+    else {
+      sprintf(temp,"AT+CMGS=%d\r",len);
+      Serial.print("SMS length ");Serial.println(len);
+      //Serial.println(mypdu.getSMS());
+      GSM.print(temp);
+    }
+  }
+  if (gotGT) {
+    Serial.println("Send it");
+    GSM.print(mypdu.getSMS());
+  }
+  while (GSM.available()) {
+    int c = GSM.read();
+    Serial.write((char)c);
+    gotGT = c == '>';  // let me know when I can send the payload
+  }
 }

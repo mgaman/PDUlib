@@ -3,8 +3,7 @@
 # PDUlib
 Encode/Decode PDU for sending/receiving SMS.
 ## Alphabets
-Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want. 
-BTW Emojis can also be sent.  The Arduino IDE does not support inserting emojis into text. The VS Code user should install the Emoji plugin.  
+Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want.  
 This implementation does not process the User Data Header (UDH). The practical implication of this is that concatenated messages or national language extensions are not supported.
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
@@ -31,7 +30,7 @@ Returns the body of an incoming message. Note that it is a UTF-8 string. In a De
 <b>int encodePDU(const char *recipient,const char *message)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
-3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** ths is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/)  
+3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/)  
 A return value of -1 indicates that the message is longer than the maximum allowed.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
@@ -42,40 +41,33 @@ AT+CSCA?
 <b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
 # Development and Debugging
-The code was developed in VS Code and Ubuntu desktop environment.  
-There are a few differences between the VS Code environment and the Arduino IDE which is the default mode for many Arduino developers. The main difference is the file name of an Arduino sketch. In VS Code this is a classical C++ file with the extension **cpp** e.g. **anyName.cpp**. In Arduino IDE the extension is **ino** and the leading part of the name **must** be the same as that of the folder enclosing the sketch e.g. for a sketch called **blah** the sketch folder is **blah** and the sketch file name **blah.ino**.  
-I have constructed the source tree so that it is valid for both Arduino IDE and PlatformIO environments. For example the files **pdulib/examples/Decode/Decode.ino** and **pdulib/examples/Decode/src/Decode.c++** are identical but with different names and location.<br>
-I use the extension c++ to prevent the Arduino IDE compiling both ino and any cpp files it finds. PlatformIO will happily compile c++ files.<br> 
-Arduino has its own peculiarities for the location of library header files. It folds many standard libraries into **Arduino.h** whereas the Desktop user has to name them specifically. This is the reason behind the **ARDUINO_BASE** macro. 
+My development environment is VS Code/PlatformIO on Ubuntu. It is basically an Arduino environment which means that while I get
+some goodies such as Intellisense these are no debugging facilities such as breakpoints and watch. As pdulib is pure C++ I had to adopt another strategy to debug the same pdulib sources, but in their desktop environment. This is described later.
+## Arduino Development
+New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and libray folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you creater a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
+In order for the pdulib sources to compile correctly the compile time definition **ARDUINO_BASE** must be set. Also, optionally, the macro **PM**, if set, will place translation tables in flash memory. The method of setting these macros is different for PlatformIO and Arduino IDE and is described below.
+### PlatformIO
+To add compiler switches, add the following line to the **platformio.ini** file, **env** section.
 ```
-#ifdef ARDUINO_BASE
-#include <Arduino.h>     
-#else
-#include <math.h>
-#include <string.h>
-#endif
+build_flags = -DARDUINO_BASE -DPM
 ```
-The library, as released, is configured for the Arduino user i.e. in **pdulib.cpp** the macro **ARDUINO_BASE** is enabled. However, if you clone this library for further development and intend to use the Desktop environment, do as follows.  
-1. Comment out the macro ARDUINO_BASE. You can now compile for the desktop.   
-2. For Arduino sketches, add the line **build_flags=-DARDUINO_BASE** to the platformio.ini configuration file. You can now compile for Arduino.<br>
-
-When developing a new Arduino sketch you must also show the sketch where pdulib is located. In a classical PlatformIO layout, library files are located in the pdulib/examples/sketch/lib/pdulib folder. In reality they are in the pdulib/src folder. To overcome this, create the folder pdulib/examples/sketch/lib/pdulib and create soft links from there to the actual source files.<br>
-The script **createSoftLinks.sh** does this automagically for all the examples.
+### Arduino IDE
+Arduino IDE uses a different directory structure and has different rules for file names. Firstly the source files must be in the project root folder and the main file must be named \<sketchname\>.ino. Also any files with the suffix cpp will get compiled, hence the reason for naming **main.cpp** to \<sketchname.c++\>. Simply copy src/\<sketchname\>.c++ to the root folder and change the suffix to ino.  
+To add compiler switches, you must edit the Arduino **platform.txt** files. There is a separate file for every architecture compiler installed on your system e.g. if you use both avr and esp8266 based boards, each will have a **platform.txt** file.  
+Edit the platform.txt file and find the line **build.extra_flags=** edit as follows
 ```
-cd pdulib/examples/sketch/lib
-mkdir pdulib
-cd pdulib
-ln -s ../../../../src/pdulib.cpp pdulib.cpp
-ln -s ../../../../src/pdulib.h pdulib.h
+build.extra_flags=-DARDUINO_BASE -DPM
 ```
-## Desktop
+To find the platform.txt file, for Ubuntu start looking in **$HOME/.arduino15/packages**. For Windows start looking in **%HOMEPATH%\\.arduinocdt\packages**. For MAC, no idea, never used one.
+## Desktop Development
+As this is a PlatformIO oriented workspace you cannot directly compile and debug in the VS Code environment. First compile externally by invoking **make** from the command line in the pdulib directory. Note that the Makefile is configured to include the pdulib sources. Once compiled the app can be debugged in normal fashion **Run/Start Debugging** menu of VS Code. Don't panic if you get an error message that Debug cannot find a target. In the top left hand corner of the screen you will see a green arrow and a drop down list of debug target, select Debug(pdulib) and click the green arrow. You are now in a classic C++ debug environment, breakpoints and all.
+# Desktop GSM Modem Setup
 My GSM modem is an SIM900 Arduino breakout board connected to an FTDI USB-Serial device, thus it appears as an /dev/ttyUSB* device. On Windows it will be COMnn where nn is a number asigned by the OS.    
 The modem needs its own power supply as the current supplied by the FTDI is insufficient.  
-Debugging in desktop mode is more convenient as it allows one to set breakpoints, watch variables etc. Something not available to the Arduino developer.  
-### Serial port
+## Serial port
 It is essential to configure the serial port correctly as some drivers edit incoming data in an annoying way e.g. converting carriage returns to line feeds.  
 Read the main() code in phonetester.cpp.
-### Typical Usage Sending an SMS
+## Typical Usage Sending an SMS
 This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope of this document.
 ```
 #include <pdulib.h>
@@ -98,7 +90,7 @@ int main(int argc,char *argv[]) {
     write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
 }  
 ```
-### Typical Usage Receiving an SMS
+## Typical Usage Receiving an SMS
 Assuming the data
 ```
 +CMT: "",24
@@ -154,23 +146,23 @@ int main() {
   ....
 }
 ```   
-
-## DesktopExample
-### phonetester.cpp
+# Desktop Example
+## phonetester.cpp
 This is the main module. The main function expects 1 parameter, the serial port of the modem. The value of this parameter is defined in .vscode/launch.json/args.  
-
 After opening the serial port and configuring it correctly, two threads are started up.  
 **serialHandler** reads all incoming data from the modem, packages up complete lines and places the lines into a queue.  
 **startup** configures the modem e.g. by setting SMS PDU mode and then exits.  
 Once **startup** finishes two more threads are started up.  
 **unsolicited** reads discrete lines from the queue created by **serialHandler** and processes each one as needed. I have provided some examples, feel free to add more.  
-**consoleHandler** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.
-## Arduino Examples
-When compiling for Arduino AVR, uncomment the line **#define PM** at the beginning of pdulib.h.  
-This transfers some static tables to progmem and frees up 128 bytes of RAM.  
+**consoleHandler** is a crude mechanism to kick off actions from the keyboard. I have implemented a simple menu where the command 's' sends an SMS. Feel free to customise the example and add more.  
+This example does not parse any data from the GSM modem, which outside the scope of this exersize. It is assumed that the modem has already been powered up and is in operating mode. 
+# Arduino Examples
 My development environment was an SIM900 shield plugged into an Arduino Uno, configured to use software serial.  
 Note that I have ignored all of the actions required to power up the shield and analyze incoming data from the shield. That is outside the scope of this document.  
-### Decode
+The SIM900 shield is reset manually.  
+Note that, because of memory constraints of the UNO, the ENCODE example splits up the texts to be sent into smaller chunks. On
+a larger device e.g. Mega2560 this may not be necessary. 
+## Decode
 ```
 #include <Arduino.h>
 #include <pdulib.h>
@@ -189,7 +181,7 @@ void setup() {
 void loop() {
 }
 ```
-### Encode
+## Encode
 ```
 #include <Arduino.h>
 #include <SoftwareSerial.h>
@@ -226,10 +218,11 @@ void loop() {
     Serial.write(GSM.read());
 }
 ```
-
 # How many characters can I send?
 The common misconception is that a single SMS can contain up to 160 characters. This does not take into account
 the definition of a character.  
 The space available for a message in a PDU is 140 bytes or 1120 bits. For a 7 bit character, or septet, there is thus
-space for 1120/7 = 160 characters. For 16 bits characters (anything not GSM 7) there is space for 1120/16 = 70 characters.  
-Furthermore, in GSM7, there are a number of escaped characters e.g. [ and ]. These take up 2 septets out of the allowed 160.
+space for 1120/7 = 160 characters.
+Furthermore, in GSM7, there are a number of escaped characters e.g. [ and ]. These take up 2 septets out of the allowed 160.  
+For 16 bits characters (anything not GSM 7) there is space for 1120/8 = 140 octets. Each 16 bit character occupies 2 octets which results in 140/2 or 70 characters.    
+Wait, there's more. Some characters e.g. emojis do not fit in the 16 bit character space so have their own encoding called Surrogate Pairs. These occupy 4 octets each. Bottom line. no more than 35 emojis per message.

@@ -16,12 +16,12 @@
  *       Added buildUtf16 helper
  * 0.4.6 Make source tree Arduino/PlatformIO compatible (no source changes)
  * 0.4.7 Fixed issue with PM macro/Arduino
- * 0.4.8 Add sanity checks to Encode and helpers to avoid overflow of PDU buffer
+ * 0.5.1 Add sanity checks to Encode and helpers to avoid overflow of PDU buffer
          Implement fully GSM 7 encoding
-         Fix GSM 7 decode bug that ignored Spanish letters
+         Fix GSM 7 decode bug that ignored Greek letters
+         Avoid duplication of static translation tables
  */
 
-//#define ARDUINO_BASE   // uncomment for Arduino
 #ifdef ARDUINO_BASE
 #include <Arduino.h>     
 #else
@@ -160,7 +160,12 @@ int PDU::convert_utf8_to_gsm7bit(const char *message, char *a7bit) {
     }
     else 
     {
+#ifdef PM
+      short x = pgm_read_word(lookup_ascii8to7 + target); 
+#else
       short x = lookup_ascii8to7[target];
+#endif
+ //     Serial.print(target);Serial.print(" ");Serial.println(x);
       if (x > 256) {  // this is an escaped character
         *a7bit++ = 27;
         *a7bit++ = x - 256;
@@ -351,7 +356,8 @@ int PDU::convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii) {
      Now add a 7 bit to 16 bit just for those unhgandled greek characters
      Could have changed lookup_ascii7to8 to lookup_ascii7to16 but would waste space
   */
-      if (C != NPC8)
+ // problem !! distinguish between genuine ? and non-printable character
+      if (a7bit[r] == '?' || C != NPC8)
         w += buildUtf(C, &ascii[w]);
       else {
 #ifdef PM

@@ -12,6 +12,12 @@ bool nextLinePDU = false;
 
 void setup() {
   Serial.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
+
   GSM.begin(9600);
   Serial.println("Send me text messages.. now  ");
 }

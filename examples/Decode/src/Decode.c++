@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <pdulib.h>
-#include "config.h"
 
 //#define FIRST_HALF  // not enough RAM for all examples in one go
 

@@ -18,7 +18,7 @@ char temp[30];
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
 
-//#define DO_ALL_GSM7  // Either print GSM7 characters or UTF16 characters
+#define DO_ALL_GSM7  // Either print GSM7 characters or UTF16 characters
 #define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
@@ -38,7 +38,7 @@ const char *final =
 #endif
 ;
 #else
-char final[50];
+char final[70];
 #endif
 
 bool runOnce = true;
@@ -47,6 +47,11 @@ bool gotGT = false;
 void setup() {
   Serial.begin(9600);
   GSM.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
 }
 
 void loop() {
