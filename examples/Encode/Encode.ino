@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <pdulib.h>
-#include "config.h"
+
+const char *SCAnumber =  "******";   // your SCA number
+const char *Target = "*****";        // recipient
 
 SoftwareSerial GSM(2,3);
 PDU mypdu = PDU();
@@ -19,11 +21,16 @@ char temp[30];
 #define EURO 0x20AC  // gsm escape
 
 #define DO_ALL_GSM7  // Either print GSM7 characters or UTF16 characters
-#define PART0      // GSM7 example too large for UNO so split into 2 parts
+//#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
 
 const char *final =
+#ifdef PM
+    "PM"
+#else
+    "NoPM"
+#endif
 #ifdef PART0
   "@£$¥èéùìòÇ Øø åÅ"
   "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"

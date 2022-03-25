@@ -155,7 +155,11 @@ int PDU::convert_utf8_to_gsm7bit(const char *message, char *a7bit) {
         w += 2;  
     }
     else if (target >= GREEK_UCS_MINIMUM) {
+#ifdef PM
+      *a7bit++ = pgm_read_word(lookup_UnicodeToGreek7 + target - GREEK_UCS_MINIMUM);
+#else
       *a7bit++ = lookup_UnicodeToGreek7[target - GREEK_UCS_MINIMUM];
+#endif
       w++;
     }
     else 

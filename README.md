@@ -58,7 +58,7 @@ Edit the platform.txt file and find the line **build.extra_flags=** edit as foll
 ```
 build.extra_flags=-DARDUINO_BASE -DPM
 ```
-To find the platform.txt file, for Ubuntu start looking in **$HOME/.arduino15/packages**. For Windows start looking in **%HOMEPATH%\\.arduinocdt\packages**. For MAC, no idea, never used one.
+To find the platform.txt file, for Ubuntu start looking in **$HOME/.arduino15/packages**. For Windows start looking in **\Program Files(X86)\Arduino\Hardware**. For MAC, no idea, never used one.
 ## Desktop Development
 As this is a PlatformIO oriented workspace you cannot directly compile and debug in the VS Code environment. First compile externally by invoking **make** from the command line in the pdulib directory. Note that the Makefile is configured to include the pdulib sources. Once compiled the app can be debugged in normal fashion **Run/Start Debugging** menu of VS Code. Don't panic if you get an error message that Debug cannot find a target. In the top left hand corner of the screen you will see a green arrow and a drop down list of debug target, select Debug(pdulib) and click the green arrow. You are now in a classic C++ debug environment, breakpoints and all.
 # Desktop GSM Modem Setup

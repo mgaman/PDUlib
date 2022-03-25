@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <pdulib.h>
-#include "config.h"
 
-SoftwareSerial GSM(2,3);
+const char *SCAnumber =  "******";   // Yout SCA number
+const char *Target = "*********";    // recipient
+
+SoftwareSerial GSM(10,11);
 PDU mypdu = PDU();
 char temp[30];
 
@@ -24,6 +26,11 @@ char temp[30];
 #ifdef DO_ALL_GSM7
 
 const char *final =
+#ifdef PM
+    "PM"
+#else
+    "NoPM"
+#endif
 #ifdef PART0
   "@£$¥èéùìòÇ Øø åÅ"
   "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
