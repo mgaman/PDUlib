@@ -2,8 +2,8 @@
  * @file pdulib.cpp
  * @author David Henry (mgadriver@gmail.com)
  * @brief A general purpose libray for encoding/decoding PDU data for GSM modems
- * @version 0.4.8
- * @date 2021-09-23
+ * @version 0.5.1
+ * @date 2022-03-25
  * 
  * @copyright Copyright (c) 2021
  * 
