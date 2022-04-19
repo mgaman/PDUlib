@@ -7,22 +7,35 @@
 #include "pdulib.h"
 #include "config.h"
 
-std::string menu = "Menu\n" "  [012345] send sms\n";
+const char *message[] = {
+  "0123456789ABCDEFGHIJ0123456789ABCDEFGHIJ0123456789ABCDEFGHIJאבגד",  // 0 GSM 16 bit
+  "abcd🍖😃אבגד",  // 1 surrogate pairs
+  "@£$¥èéùìòÇ Øø åÅ"  // 2 gsm 7 BIT
+  "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
+  " !\"#¤%&'()*+,-./"
+  "0123456789:;<=>?"
+  "¡ABCDEFGHIJKLMNO"
+  "PQRSTUVWXYZÄÖÑÜ§"
+  "¿abcdefghijklmno"
+  "pqrstuvwxyzäöñüà",
+  "^{}[]\\~|€",    // 3 GSM 7 bit escaped
+  "12345678",   // 4 gsm 7 bit 8 characters
+  "1234567",   // 5 7 gsm 7 bit 7 character
+  "ABC\015\012New Line"  // 6 GSM 7 bit with CR/LF
+};
+
+std::string menu = "Menu\n" "  [0123456] send sms\n";
 void sendSMS(int sp,int i);
 void consoleHandler(int sp) {
     char linein[10];
     std::cout << "Console handler starting\n";
     while (true) {
         std::cin.getline(linein,sizeof(linein));
-        switch (linein[0]) {
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-                sendSMS(sp,linein[0]-'0');
-                break;
+        switch (linein[0]-'0') {
+//            case 0 ... (sizeof(message)/sizeof(const char *))-1:
+            case 0 ... 6:
+              sendSMS(sp,linein[0]-'0');
+              break;
             default:
                 std::cout << menu;
         }
@@ -30,23 +43,6 @@ void consoleHandler(int sp) {
 }
 
 extern PDU mypdu;
-
-const char *message[] = {
-  "0123456789ABCDEFGHIJ0123456789ABCDEFGHIJ0123456789ABCDEFGHIJאבגד",  // GSM 16 bit
-  "abcd🍖😃אבגד",  // surrogate pairs
-  "@£$¥èéùìòÇ Øø åÅ"  // gsm 7 BIT
-  "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
-  " !\"#¤%&'()*+,-./"
-  "0123456789:;<=>?"
-  "¡ABCDEFGHIJKLMNO"
-  "PQRSTUVWXYZÄÖÑÜ§"
-  "¿abcdefghijklmno"
-  "pqrstuvwxyzäöñüà"
-  "^{}[]\\~|€",    // GSM 7 bit escaped
-  "{}",
-  "12345678",   // 8 gsm 7 bit
-  "1234567",   // 7 gsm 7 bit
-};
 
 char writeBuf[50];   // general purpose
 void sendSMS(int sp, int i) {

@@ -18,6 +18,7 @@ const char *charsets[] = {
   "PQRSTUVWXYZÄÖÑÜ§"
   "¿abcdefghijklmno"
   "pqrstuvwxyzäöñüà"
+  "\nNew Line"
   } ,
   { "^{}[]\\~|€"},   // escaped symbols }
   { "àAB€Δ" },  // contains escaped,Greek and non-gsm7

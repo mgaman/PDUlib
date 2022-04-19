@@ -42,3 +42,5 @@ inverted question mark/ exclamation
 PQRSTUVWXYZÄÖÑÜ§
 ¿abcdefghijklmno
 pqrstuvwxyzäöñüà
+CR/LF
+

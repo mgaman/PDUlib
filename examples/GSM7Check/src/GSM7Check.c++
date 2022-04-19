@@ -1,17 +1,24 @@
 #include <Arduino.h>
 #include <pdulib.h>
 
+#define PART0    // uncomment to do first half, comment to do second half
+
 char *gsm7 =
+#ifdef PART0
 "@£$¥èéùìòÇ Øø åÅ"
 "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
 " !\"#¤%&'()*+,-./"
 "0123456789:;<=>?"
-"¡ABCDEFGHIJKLMNO"
+"¡ABCDE"
+#else
+"FGHIJKLMNO"
 "PQRSTUVWXYZÄÖÑÜ§"
 "¿abcdefghijklmno"
 "pqrstuvwxyzäöñüà"
 "^{}[]\\~|€"   // escaped symbols 
-//"א"  // not gsm7
+"\r\n"     // carriage return/line feed
+"א"  // not gsm7
+#endif
 ;
 
 PDU mypdu;
@@ -44,7 +51,7 @@ void loop() {
       sprintf(printbuf,"%4d %4d",target,i);
       Serial.println(printbuf);
   //    std::cout << setw(4) << target << std::endl;
-      if (!mypdu.isGSM7(target)){
+      if (!mypdu.isGSM7(&target)){
         sprintf(printbuf," %d not GSM7",target);
         Serial.println(printbuf);
       }
