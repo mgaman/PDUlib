@@ -228,7 +228,7 @@ int PDU::utf8_to_packed7bit(const char *utf8, char *pdu, int *septets)
 int PDU::encodePDU(const char *recipient, const char *message)
 {
   int length = -1;
-  int delta;
+  int delta = 0;
   char tempbuf[PDU_BINARY_MAX_LENGTH];
   smsOffset = 0;
   int beginning = 0;
@@ -737,6 +737,7 @@ int PDU::decodeAddress(const char *pdu,char *output,eLengthType et) {  // pdu to
     switch ((adt & TON_MASK) >> TON_OFFSET) {
       case 1:  // international number
         *output++ = '+';  // add prefix and fall through
+        [[fallthrough]];
       case 2:  // national number
         BCDtoString(output,pdu,addressLength);
         if ((addressLength&1)==1) // if odd, bump 1
