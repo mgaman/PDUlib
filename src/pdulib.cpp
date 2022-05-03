@@ -228,7 +228,7 @@ int PDU::utf8_to_packed7bit(const char *utf8, char *pdu, int *septets)
 int PDU::encodePDU(const char *recipient, const char *message)
 {
   int length = -1;
-  int delta = 0;
+  int delta = -1;
   char tempbuf[PDU_BINARY_MAX_LENGTH];
   smsOffset = 0;
   int beginning = 0;
