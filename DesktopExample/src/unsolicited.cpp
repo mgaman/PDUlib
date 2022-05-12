@@ -7,6 +7,7 @@
 #include "pdulib.h"
 
 extern std::queue<std::string> inputQueue;
+extern std::queue<int8_t> GtQueue;
 extern PDU mypdu;
 
 std::string cgregstates[] = {
@@ -94,6 +95,9 @@ void unsolicited(int sp) {
             }
             else if (response.compare(0,11,"+HTTPACTION") == 0)
                 write(sp,"AT+HTTPREAD\r",12);
+            else if (response.compare(0,6,"+CMGS:") == 0) {  // SMS sent
+                GtQueue.push(2);
+            }
         }
     }
 }

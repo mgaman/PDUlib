@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <pdulib.h>
 
-#define PART0    // uncomment to do first half, comment to do second half
+//#define PART0    // uncomment to do first half, comment to do second half
 
 char *gsm7 =
 #ifdef PART0
@@ -47,10 +47,8 @@ void loop() {
     for (int i=0; i<numoctets/2;i++) {
       // ucs2 is bigendian, swap to little endian
       target = (*source << 8) | *(source+1);
-  //    std::cout << setw(4) << i << " " << setw(4) << target << std::endl;
       sprintf(printbuf,"%4d %4d",target,i);
       Serial.println(printbuf);
-  //    std::cout << setw(4) << target << std::endl;
       if (!mypdu.isGSM7(&target)){
         sprintf(printbuf," %d not GSM7",target);
         Serial.println(printbuf);

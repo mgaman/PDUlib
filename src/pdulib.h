@@ -12,6 +12,7 @@
  * 0.5.1 Fixed bug where Greek characters in a GSM7 message were ignored
  *       Fixed bad behaviour where static lookup tables were duplicated (moved to pdulib.cpp)
  *       Default GSM7 now fully supported
+ * 0.5.4 Add  getConcatInfo method to support concatenated messages
  */
 
 
@@ -41,8 +42,10 @@
 #define PDU_VALIDITY_PRESENT_RELATIVE 2
 #define PDU_VALIDITY_PRESENT_ENHANCED 1
 #define PDU_VALIDITY_PRESENT_ABSOLUTE 3
-#define PSU_SMS_DELIVER 0
-#define PSU_SMS_SUBMIT  1
+#define PDU_UDHI 6
+// PDU MTI values
+#define PDU_SMS_DELIVER 0
+#define PDU_SMS_SUBMIT  1
 
 // type of address
 #define INTERNATIONAL_NUMBER 0x91
@@ -67,7 +70,6 @@
 #define EURO_UCS 0x20AC
 //#define SURROGATE_PAIR 0xD800
 
-
 enum eDCS { ALPHABET_7BIT, ALPHABET_8BIT, ALPHABET_16BIT };
 enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
@@ -88,7 +90,7 @@ public:
  * @param message The message in UTF-8 format
  * @return int The length of the message, need for the GSM command <b>AT+CSMG=nn</b>
  */
-  int encodePDU(const char *recipient,const char *message);
+  int encodePDU(const char *recipient,const char *message,unsigned short csms=0, unsigned char numparts=0, unsigned char partnumber=0);
 
 /**
    * @brief Get the address of the PDU message created by <b>encodePDU</b>
@@ -192,6 +194,12 @@ public:
    * @return int The length (in bytes) of the converted character. This will be 4 for a Surrogate Pair (e.g an Emoji) else 2.
    */
   int utf8_to_ucs2_single(const char *utf8, unsigned short *pucs2);  // translate to a single ucs2
+  /**
+   * @brief Return info on concatenated message
+   * @return Pointer to an array of 3 int. 1st int, CMCS number, 2nd byte part number, 3rd number of parts, zero means this is not a concatenated message
+   *  
+   */
+  int * getConcatInfo();
 private:
   // following for storing decode fields of incoming messages
   int scalength;
@@ -207,17 +215,21 @@ private:
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
   char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
+  int concatInfo[3];
+  unsigned char udhbuffer[8];
+
+
   // helper methods
 
   void stringToBCD(const char *number, char *pdu);
   void BCDtoString(char *number, const char *pdu,int length);
   void digitSwap(const char *number, char *pdu);
   
-  int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets);
-  int pdu_to_ascii(const char *pdu, int pdulength, char *ascii);
+  int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int UDHsize);
+  int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii);
 
-  int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit);
-  int convert_7bit_to_ascii(unsigned char *a7bit, int length, char *ascii);
+  int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit, int udhsize);
+  int convert_7bit_to_unicode(unsigned char *a7bit, int length, char *ascii);
 
   unsigned char gethex(const char *pc);
   void putHex(unsigned char b, char *target);
@@ -236,6 +248,8 @@ private:
 
 //  //  Get SCA number for outgoing SMS
 //  const char *getMySCAnumber();
+  int buildUDH(unsigned short,unsigned,unsigned);
+
 };
 
 extern const
@@ -248,7 +262,7 @@ extern const
 #ifdef PM
       PROGMEM
 #endif
-              unsigned char lookup_ascii7to8[];
+              unsigned char lookup_gsm7toUnicode[];
 
 extern const
 #ifdef PM

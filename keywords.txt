@@ -9,6 +9,7 @@ setSCAnumber	KEYWORD2
 getSMS	KEYWORD2
 # methods for receiving SMS messages
 decodePDU	KEYWORD2
+getConcatInfo KEYWORD2
 getSCAnumber	KEYWORD2
 getSender	KEYWORD2
 getTimeStamp	KEYWORD2

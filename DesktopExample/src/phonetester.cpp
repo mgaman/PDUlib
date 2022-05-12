@@ -17,6 +17,7 @@
 
 int serial_port;
 std::queue<std::string> inputQueue;
+std::queue<int8_t> GtQueue;  // to let us know when a single > arrives
 
 // Create new termios struct, we call it 'tty' for convention
 // No need for "= {0}" at the end as we'll immediately write the existing
@@ -39,7 +40,7 @@ PDU mypdu = PDU();
 void greekDecode(PDU);
 void gsm7check(PDU);
 void gsm7encode(PDU);
-
+void UdhDecode(PDU);
 
 // Check for errors
 int main(int argc, char *argv[]) {
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
     //greekDecode(mypdu);
     //gsm7check(mypdu);
     //gsm7encode(mypdu);
+    //UdhDecode(mypdu);
     ///////////////////////////////////////////////
     if (argc != 2) {
         std::cout <<"Usage: pduapp serial_port\n\n";

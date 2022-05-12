@@ -4,7 +4,7 @@
 Encode/Decode PDU for sending/receiving SMS.
 ## Alphabets
 Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want.  
-This implementation does not process the User Data Header (UDH). The practical implication of this is that concatenated messages or national language extensions are not supported.
+This implementation partially processes the User Data Header (UDH). The practical implication of this is that concatenated messages are supported but media or national language extensions are not supported.
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
 # API
@@ -13,7 +13,18 @@ The code is written in plain C++ so it should be usable by both desktop and Ardu
 If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displayed as.  
 +CMT: nn    where nn is length  
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
-After decoding the PDU its constituent parts can be recovered with the following methods.
+After decoding the PDU its constituent parts can be recovered with the following methods.  
+Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS).
+## getConcatInfo
+<b>int *getConcatInfo()</b>  
+To be called after calling **decodePDU**.  
+Returns a pointer to an array of 3 integers that lists the concatenation data of the message. If any part of the array is zero, it is a standalone message, not part of a concatenated message.  
+index 0 - reference number of the message.  
+index 1 - Total number of parts in this message.  
+index 2 - Part number (starts from 1).  
+
+Note that a multi-part message may not necessarily arrive in order of part numbers. It is your reponsibility to keep track of
+concatenation information in order to reconstruct the complete, original, message. 
 ## getSCAnumber
 <b>const char *getSCAnumber()</b>  
 Returns the number of the SCA from an incoming message, i.e. the Service Centre that delivered the message.  
@@ -28,9 +39,14 @@ Returns the timestamp of an incoming message in the format YYMMDDHHMMSS.
 Returns the body of an incoming message. Note that it is a UTF-8 string. In a Desktop environment it should be displayable, as is.  However in a resource restricted environment e.g. an OLED screen attached to an Arduino you will probably have to create a solution for non-ASCII characters.
 ## encodePDU
 <b>int encodePDU(const char *recipient,const char *message)</b>  
+<b>int encodePDU(const char *recipient,const char *message, unsigned short refNumber,unsigned char numParts,unsigned char partNumber)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
-3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/)  
+3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).
+4. refNumber. If specified this is part of a multi-part message. refNumber must be the same for all parts of the message.  
+5. numParts. If specified this is part of a multi-part message. This specifies how many messages make up the entire message. numParts must be the same for all parts of the message.  
+6. partNumber. If specified this is part of a multi-part message. This specifies the index of this part in the whole message. The index starts from 1.  
+
 A return value of -1 indicates that the message is longer than the maximum allowed.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
@@ -225,4 +241,14 @@ The space available for a message in a PDU is 140 bytes or 1120 bits. For a 7 bi
 space for 1120/7 = 160 characters.
 Furthermore, in GSM7, there are a number of escaped characters e.g. [ and ]. These take up 2 septets out of the allowed 160.  
 For 16 bits characters (anything not GSM 7) there is space for 1120/8 = 140 octets. Each 16 bit character occupies 2 octets which results in 140/2 or 70 characters.    
-Wait, there's more. Some characters e.g. emojis do not fit in the 16 bit character space so have their own encoding called Surrogate Pairs. These occupy 4 octets each. Bottom line. no more than 35 emojis per message.
+Wait, there's more. Some characters e.g. emojis do not fit in the 16 bit character space so have their own encoding called Surrogate Pairs. These occupy 4 octets each. Bottom line. no more than 35 emojis per message.  
+Finally, multi-part messages also use up part of the payload for the User Data Header (UDH). For a GSM7 message that will cost you 8 septets, for a non-GSM7 message 4 characters or 2 Surrogate Pairs.  
+# Multi-Part Messages
+## Sending  
+It is just a case of sending a set of messages, each one specifying a common reference number, common number of parts and the index of this part in the whole message.  
+As far as the Sender is concerned, it is just sending a series of discrete messages. It is not concerned how the receiver reconstructs the complete whole.  
+When sending more than 1 multi-part message, ensure that the refNumber changes to help the receiver differentiate between parts of different messages.  
+It is permitted to mix GSM7 and non-GSM7 parts.  
+## Receiving
+After receiving a message, use the <b>getConcatInfo</b> to discover if this is a standalone message or part of a multi-part message.  
+Note that multi-parts may not necessarily arrive in ascending order of partNumber.

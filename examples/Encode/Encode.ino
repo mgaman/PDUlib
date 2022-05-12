@@ -1,10 +1,12 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <pdulib.h>
-
-const char *SCAnumber =  "******";   // your SCA number
-const char *Target = "*****";        // recipient
-
+#include "credentials.h"
+/*******************************
+ * 
+ * Update credentials.h beore running this code
+ * 
+ ******************************/
 SoftwareSerial GSM(2,3);
 PDU mypdu = PDU();
 char temp[30];
@@ -20,7 +22,7 @@ char temp[30];
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
 
-#define DO_ALL_GSM7  // Either print GSM7 characters or UTF16 characters
+//#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
 //#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
@@ -36,6 +38,7 @@ const char *final =
   "Δ_ΦΓΛΩΠΨΣΘΞ ÆæßÉ"
   " !\"#¤%&'()*+,-./"
   "0123456789:;<=>?"
+  "\015\012New Line"   // cr/lf
 #else
   "¡ABCDEFGHIJKLMNO"
   "PQRSTUVWXYZÄÖÑÜ§"
@@ -109,5 +112,8 @@ void loop() {
     int c = GSM.read();
     Serial.write((char)c);
     gotGT = c == '>';  // let me know when I can send the payload
+  }
+  while (Serial.available()) {
+    GSM.write(Serial.read());
   }
 }

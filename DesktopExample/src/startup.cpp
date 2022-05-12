@@ -6,6 +6,7 @@
 #include <string.h>
 
 extern std::queue<std::string> inputQueue;
+extern std::queue<int8_t> GtQueue;
 /*
     Initialization of modem where we send a command and expect a response
     usually OK within a set time

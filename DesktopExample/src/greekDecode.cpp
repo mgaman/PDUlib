@@ -1,5 +1,5 @@
 /*
-   Greek characters GSM 7 bit were being ignored as lookup_ascii7to8 just markedd them as unprintable
+   Greek characters GSM 7 bit were being ignored as lookup_gsm7toUnicode just markedd them as unprintable
 */
 #include <iostream>
 #include <pdulib.h>
