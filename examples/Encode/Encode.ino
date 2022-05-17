@@ -7,7 +7,9 @@
  * Update credentials.h beore running this code
  * 
  ******************************/
-SoftwareSerial GSM(2,3);
+//SoftwareSerial GSM(2,3);  // UNO
+SoftwareSerial GSM(10,11); // Mega2560
+
 PDU mypdu = PDU();
 char temp[30];
 
@@ -22,7 +24,7 @@ char temp[30];
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
 
-//#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
+#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
 //#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7

@@ -316,13 +316,16 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
   else
     udhsize = buildUDH(csms, numparts, partnumber);
   int pduLengthPlaceHolder = 0;
+  int septetcount=0;
   switch (dcs)
   {
+      case ALPHABET_8BIT:
+        delta = -1;  // not handled yet, cause failure
+        break;
   case ALPHABET_7BIT:
     smsSubmit[smsOffset++] = DCS_7BIT_ALPHABET_MASK;
     pduLengthPlaceHolder = smsOffset;
     smsSubmit[smsOffset++] = 1; // placeholder for length in septets
-    int septetcount;
     // insert UDH if any
     if (udhsize == 6)
     { // 1 byte ref number, need to pad UDH to 7 octets
@@ -353,6 +356,7 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
     delta = utf8_to_ucs2(savem, (char *)&smsSubmit[smsOffset]);
     smsSubmit[pduLengthPlaceHolder] = delta + udhsize; // correct message length
     length = smsOffset + delta;        // allow for length byte
+    break;
   default:
     break;
   }

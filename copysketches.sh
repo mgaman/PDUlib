@@ -13,6 +13,7 @@ do
 	cd $current
 	cd examples/$d
 	cp src/$d.c++ $d.ino
+	cp src/*.h .
 done
 echo 'All done'
 

@@ -23,7 +23,7 @@ index 0 - reference number of the message.
 index 1 - Total number of parts in this message.  
 index 2 - Part number (starts from 1).  
 
-Note that a multi-part message may not necessarily arrive in order of part numbers. It is your reponsibility to keep track of
+Note that a multi-part message may not necessarily arrive in order of part numbers. It is your responsibility to keep track of
 concatenation information in order to reconstruct the complete, original, message. 
 ## getSCAnumber
 <b>const char *getSCAnumber()</b>  
