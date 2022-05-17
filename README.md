@@ -42,11 +42,10 @@ Returns the body of an incoming message. Note that it is a UTF-8 string. In a De
 <b>int encodePDU(const char *recipient,const char *message, unsigned short refNumber,unsigned char numParts,unsigned char partNumber)</b>  
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
-3. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).
-4. refNumber. If specified this is part of a multi-part message. refNumber must be the same for all parts of the message.  
-5. numParts. If specified this is part of a multi-part message. This specifies how many messages make up the entire message. numParts must be the same for all parts of the message.  
-6. partNumber. If specified this is part of a multi-part message. This specifies the index of this part in the whole message. The index starts from 1.  
-
+3. refNumber. If specified this is part of a multi-part message. refNumber must be the same for all parts of the message.  
+4. numParts. If specified this is part of a multi-part message. This specifies how many messages make up the entire message. numParts must be the same for all parts of the message.  
+5. partNumber. If specified this is part of a multi-part message. This specifies the index of this part in the whole message. The index starts from 1.  
+6. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).  
 A return value of -1 indicates that the message is longer than the maximum allowed.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
