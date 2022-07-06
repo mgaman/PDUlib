@@ -60,20 +60,19 @@ My development environment is VS Code/PlatformIO on Ubuntu. It is basically an A
 some goodies such as Intellisense these are no debugging facilities such as breakpoints and watch. As pdulib is pure C++ I had to adopt another strategy to debug the same pdulib sources, but in their desktop environment. This is described later.
 ## Arduino Development
 New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and libray folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you creater a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
-In order for the pdulib sources to compile correctly the compile time definition **ARDUINO_BASE** must be set. Also, optionally, the macro **PM**, if set, will place translation tables in flash memory. The method of setting these macros is different for PlatformIO and Arduino IDE and is described below.
+The macro **PM**, if set, will place translation tables in flash memory. The method of setting this macro is different for PlatformIO and Arduino IDE and is described below.
 ### PlatformIO
 To add compiler switches, add the following line to the **platformio.ini** file, **env** section.
 ```
-build_flags = -DARDUINO_BASE -DPM
+build_flags = -DPM
 ```
 ### Arduino IDE
+Edit the **pdu.h** file, uncomment the line to enable PM
+```
+//#define PM
+```
 Arduino IDE uses a different directory structure and has different rules for file names. Firstly the source files must be in the project root folder and the main file must be named \<sketchname\>.ino. Also any files with the suffix cpp will get compiled, hence the reason for naming **main.cpp** to \<sketchname.c++\>. Simply copy src/\<sketchname\>.c++ to the root folder and change the suffix to ino.  
-To add compiler switches, you must edit the Arduino **platform.txt** files. There is a separate file for every architecture compiler installed on your system e.g. if you use both avr and esp8266 based boards, each will have a **platform.txt** file.  
-Edit the platform.txt file and find the line **build.extra_flags=** edit as follows
-```
-build.extra_flags=-DARDUINO_BASE -DPM
-```
-To find the platform.txt file, for Ubuntu start looking in **$HOME/.arduino15/packages**. For Windows start looking in **\Program Files(X86)\Arduino\Hardware**. For MAC, no idea, never used one.
+
 ## Desktop Development
 As this is a PlatformIO oriented workspace you cannot directly compile and debug in the VS Code environment. First compile externally by invoking **make** from the command line in the pdulib directory. Note that the Makefile is configured to include the pdulib sources. Once compiled the app can be debugged in normal fashion **Run/Start Debugging** menu of VS Code. Don't panic if you get an error message that Debug cannot find a target. In the top left hand corner of the screen you will see a green arrow and a drop down list of debug target, select Debug(pdulib) and click the green arrow. You are now in a classic C++ debug environment, breakpoints and all.
 # Desktop GSM Modem Setup

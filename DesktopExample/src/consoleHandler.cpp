@@ -6,7 +6,7 @@
 #include <queue>
 
 #include "pdulib.h"
-#include "config.h"
+#include "credentials.h"
 
 extern std::queue<int8_t> GtQueue;
 
@@ -25,7 +25,7 @@ const char *message[] = {
   "12345678",   // 4 gsm 7 bit 8 characters
   "1234567",   // 5 7 gsm 7 bit 7 character
   "ABC\015\012New Line",  // 6 GSM 7 bit with CR/LF
-  "אָאַאְאּאִאֶאֵאֹאֻאֲאֳאֱאׁאׂאֿ"  // nikkud
+  "אָאַאְאּאִאֶאֵאֹאֻאֲאֳאֱאׁאׂאֿ"  // 7 nikkud
 };
 
 struct sCM {
@@ -41,7 +41,7 @@ sCM concatMessage1 = { 6,{
   "😃"      // surrogate pair
   }};
 
-std::string menu = "Menu\n" "  [01234567] send sms\n   c senbd multipart sms";
+std::string menu = "Menu\n" "  [01234567] send sms\n   c send multipart sms";
 void sendSMS(int sp,int i);
 void sendConcat(int sp, sCM *);
 

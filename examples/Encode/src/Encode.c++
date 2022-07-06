@@ -7,8 +7,8 @@
  * Update credentials.h beore running this code
  * 
  ******************************/
-//SoftwareSerial GSM(2,3);  // UNO
-SoftwareSerial GSM(10,11); // Mega2560
+SoftwareSerial GSM(2,3);  // UNO
+//SoftwareSerial GSM(10,11); // Mega2560
 
 PDU mypdu = PDU();
 char temp[30];

@@ -6,8 +6,8 @@
 bool once = false;
 bool haveSCA = false;
 
-//SoftwareSerial gsm(2,3);
-SoftwareSerial gsm(10,11);
+SoftwareSerial gsm(2,3);
+//SoftwareSerial gsm(10,11);
 PDU mypdu = PDU();
 
 #define SEND_MULTI_PART // uncomment to send multipart, comment to send standalone messages

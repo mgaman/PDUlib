@@ -12,10 +12,11 @@
  * 0.5.1 Fixed bug where Greek characters in a GSM7 message were ignored
  *       Fixed bad behaviour where static lookup tables were duplicated (moved to pdulib.cpp)
  *       Default GSM7 now fully supported
- * 0.5.4 Add  getConcatInfo method to support concatenated messages
+ * 0.5.4 Add getConcatInfo method to support concatenated messages
+ * 0.5.5 Place PROGMEM option here (if desired)
  */
 
-
+//#define PM   // uncomment to implement Arduino PROGMEM feature
 #ifdef PDU_LIB_INCLUDE
 #else
 
@@ -59,6 +60,7 @@
 #define MAX_SMS_LENGTH_7BIT 160 // GSM 3.4
 #define MAX_NUMBER_OCTETS 140
 #define MAX_NUMBER_LENGTH 20    // gets packed into BCD or packed 7 bit
+#define UTF8_BUFFSIZE 100   // tailor to what you need
 
 //SCA (12) + type + mref + address(12) + pid + dcs + length + data(140) -- no valtime
 #define PDU_BINARY_MAX_LENGTH 170
@@ -207,7 +209,7 @@ private:
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
   int meslength;
-  char mesbuff[MAX_SMS_LENGTH_7BIT];  // actually packed 7 bit is 140
+  char utf8buff[UTF8_BUFFSIZE];  // actually packed 7 bit is 140 + escaped chars
   int tslength;
   char tsbuff[20];    // big enough for timestamp
   char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS

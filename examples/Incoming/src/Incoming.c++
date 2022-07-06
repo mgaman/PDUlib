@@ -29,6 +29,7 @@ void processLine() {
   if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
       Serial.print("From: "); Serial.println(mypdu.getSender());
+      Serial.print("Timestamp: "); Serial.println(mypdu.getTimeStamp());
       Serial.print("Msg: "); Serial.println(mypdu.getText());
       // is this standalone or multi-part ?
       int *concat = mypdu.getConcatInfo();

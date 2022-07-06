@@ -25,9 +25,11 @@
           Fix issue #13 CR/LF missing from GSM7 default alphabet
           Fix issue #16 bug, alphanumeric origin address, translated too many characters
           Issue #14 Add handling for User Data Header/Concatenated messages
+  * 0.5.5 Change default compilation model from Desktop to Arduino. Necessitated by
+        confusion as how to manipulate Arduino IDE preferences
  */
 
-#ifdef ARDUINO_BASE
+#ifndef DESKTOP_PDU
 #include <Arduino.h>
 #else
 #include <math.h>
@@ -144,7 +146,7 @@ void PDU::digitSwap(const char *number, char *pdu)
     message is too long
     Return -1 is message is longer than the maximum allowed
 */
-int PDU::convert_utf8_to_gsm7bit(const char *message, char *gsm7bit,int udhsize)
+int PDU::convert_utf8_to_gsm7bit(const char *message, char *gsm7bit, int udhsize)
 {
 
   int w = 0;
@@ -196,10 +198,10 @@ int PDU::convert_utf8_to_gsm7bit(const char *message, char *gsm7bit,int udhsize)
       }
     }
     message += length; // bump to next character
-    if (w > MAX_SMS_LENGTH_7BIT-udhsize)
+    if (w > MAX_SMS_LENGTH_7BIT - udhsize)
       break;
   }
-  return w > (MAX_SMS_LENGTH_7BIT-udhsize) ? -1 : w;
+  return w > (MAX_SMS_LENGTH_7BIT - udhsize) ? -1 : w;
 }
 /*
     UTF8 string may contain characters that need to be changed from 8 bit ISO-8859
@@ -217,7 +219,7 @@ int PDU::utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int udhsi
   char gsm7bit[MAX_SMS_LENGTH_7BIT + 2]; // allow for overflow
 
   /* Start by converting the UTF8-string to a 7bit-string */
-  len7bit = convert_utf8_to_gsm7bit(utf8, gsm7bit,udhsize);
+  len7bit = convert_utf8_to_gsm7bit(utf8, gsm7bit, udhsize);
   // sanity check
   if (len7bit == -1)
   {
@@ -303,7 +305,7 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
     dcs = ALPHABET_16BIT;
   setAddress(scanumber, *scanumber == '+' ? INTERNATIONAL_NUMERIC : NATIONAL_NUMERIC, OCTETS); // set SCSA address
   beginning = smsOffset;                                                                       // length parameter to +CMGS starts from
-  int pdutype = PDU_SMS_SUBMIT;                                                                             // SMS-SUBMIT
+  int pdutype = PDU_SMS_SUBMIT;                                                                // SMS-SUBMIT
   if (csms != 0)
     pdutype |= (1 << PDU_UDHI); // set UDH bit for concatenated message
   smsSubmit[smsOffset++] = pdutype;
@@ -316,12 +318,12 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
   else
     udhsize = buildUDH(csms, numparts, partnumber);
   int pduLengthPlaceHolder = 0;
-  int septetcount=0;
+  int septetcount = 0;
   switch (dcs)
   {
-      case ALPHABET_8BIT:
-        delta = -1;  // not handled yet, cause failure
-        break;
+  case ALPHABET_8BIT:
+    delta = -1; // not handled yet, cause failure
+    break;
   case ALPHABET_7BIT:
     smsSubmit[smsOffset++] = DCS_7BIT_ALPHABET_MASK;
     pduLengthPlaceHolder = smsOffset;
@@ -340,8 +342,8 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
     delta = utf8_to_packed7bit(savem, &smsSubmit[smsOffset], &septetcount, udhsize == 0 ? 0 : 8);
     smsSubmit[pduLengthPlaceHolder] = septetcount;
     if (udhsize != 0)
-      smsSubmit[pduLengthPlaceHolder] += 8;   // 7 octets of udh = 8 septets
-    length = smsOffset + delta; // allow for length byte
+      smsSubmit[pduLengthPlaceHolder] += 8; // 7 octets of udh = 8 septets
+    length = smsOffset + delta;             // allow for length byte
     break;
   case ALPHABET_16BIT:
     smsSubmit[smsOffset++] = DCS_16BIT_ALPHABET_MASK;
@@ -355,7 +357,7 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
     }
     delta = utf8_to_ucs2(savem, (char *)&smsSubmit[smsOffset]);
     smsSubmit[pduLengthPlaceHolder] = delta + udhsize; // correct message length
-    length = smsOffset + delta;        // allow for length byte
+    length = smsOffset + delta;                        // allow for length byte
     break;
   default:
     break;
@@ -578,8 +580,8 @@ bool PDU::decodePDU(const char *pdu)
   i = decodeAddress(&pdu[index], addressBuff, NIBBLES);
   if (i == 0)
     return false;
-  index += i + 4;            // skip over sender number length & atn
-  //pid = gethex(&pdu[index]); // TP-PID
+  index += i + 4; // skip over sender number length & atn
+  // pid = gethex(&pdu[index]); // TP-PID
   index += 2;                // skip over PID
   dcs = gethex(&pdu[index]); // data coding system
   index += 2;
@@ -598,7 +600,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2;
   int utflength = 0, utfoffset;
   unsigned short ucs2;
-  *mesbuff = 0;
+  *utf8buff = 0;
   if (udhPresent)
   {
     int udhlength = gethex(&pdu[index]);
@@ -620,7 +622,8 @@ bool PDU::decodePDU(const char *pdu)
       {
         concatInfo[0] = gethex(&pdu[index]);
         index += 2; // skip 8 bits of CSMS ref
-        if (udhlength == 6) {  // get lo byte of ref number, have already goy hi byte
+        if (udhlength == 6)
+        { // get lo byte of ref number, have already goy hi byte
           unsigned char lo = gethex(&pdu[index]);
           concatInfo[0] <<= 8;
           concatInfo[0] += lo;
@@ -652,8 +655,8 @@ bool PDU::decodePDU(const char *pdu)
   {
   case DCS_7BIT_ALPHABET_MASK:
     outindex = 0;
-    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)mesbuff);
-    mesbuff[i] = 0;
+    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)utf8buff);
+    utf8buff[i] = 0;
     meslength = i;
     rc = true;
     break;
@@ -668,11 +671,11 @@ bool PDU::decodePDU(const char *pdu)
       pdu_to_ucs2(&pdu[index], 2, &ucs2); // treat 2 octets
       index += 4;
       dulength -= 2;
-      utflength = ucs2_to_utf8(ucs2, mesbuff + utfoffset);
+      utflength = ucs2_to_utf8(ucs2, utf8buff + utfoffset);
       utfoffset += utflength;
     }
     meslength = utfoffset;
-    mesbuff[utfoffset] = 0; // end marker
+    utf8buff[utfoffset] = 0; // end marker
     rc = true;
     break;
   default:
@@ -876,7 +879,7 @@ const char *PDU::getTimeStamp()
 }
 const char *PDU::getText()
 {
-  return mesbuff;
+  return utf8buff;
 }
 
 void PDU::BCDtoString(char *output, const char *input, int length)
