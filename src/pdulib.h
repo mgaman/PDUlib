@@ -83,7 +83,7 @@ enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibble
 class PDU
 {
 public:
-  PDU();
+  PDU(int = UTF8_BUFFSIZE);
   ~PDU();
 /**
  * @brief Encode a PDU block for sending to an GSM modem
@@ -142,7 +142,7 @@ public:
   const char *getTimeStamp();
 
   /**
-   * @brief Get the text froma a decoded PDU.
+   * @brief Get the text from a decoded PDU.
    * 
    * @return const unsigned char* The message in UTF-8 format.
    */
@@ -202,17 +202,25 @@ public:
    *  
    */
   int * getConcatInfo();
+  /**
+   * @brief Return an indicator if the incoming SMS was fully decoded or not
+   * @return True if the incoming message overflowed the work buffer, False if not
+   * 
+   */
+  bool getOverflow();
 private:
+  bool overFlow;
   // following for storing decode fields of incoming messages
   int scalength;
-  char scabuff[MAX_NUMBER_LENGTH];
+  char scabuff[MAX_NUMBER_LENGTH]; // both incoming and outgoing SCA
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
-  int meslength;
-  char utf8buff[UTF8_BUFFSIZE];  // actually packed 7 bit is 140 + escaped chars
+//  int utf8length;
+  int generalWorkBuffLength;  // static size of utf8buff
+  char *generalWorkBuff;  // allocate dynamically
   int tslength;
   char tsbuff[20];    // big enough for timestamp
-  char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
+ // char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
   int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;

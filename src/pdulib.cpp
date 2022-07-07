@@ -38,7 +38,10 @@
 #include <ctype.h>
 #include <pdulib.h>
 
-PDU::PDU() {}
+PDU::PDU(int worksize ) {
+  generalWorkBuffLength = worksize;
+  generalWorkBuff = new char[generalWorkBuffLength+2]; // dynamically allocate buffer
+}
 PDU::~PDU() {}
 
 // array must be defined before its use in sizeof statement
@@ -303,7 +306,7 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
   }
   if (!gsm7bit)
     dcs = ALPHABET_16BIT;
-  setAddress(scanumber, *scanumber == '+' ? INTERNATIONAL_NUMERIC : NATIONAL_NUMERIC, OCTETS); // set SCSA address
+  setAddress(scabuff, *scabuff == '+' ? INTERNATIONAL_NUMERIC : NATIONAL_NUMERIC, OCTETS); // set SCSA address
   beginning = smsOffset;                                                                       // length parameter to +CMGS starts from
   int pdutype = PDU_SMS_SUBMIT;                                                                // SMS-SUBMIT
   if (csms != 0)
@@ -443,6 +446,12 @@ int PDU::convert_7bit_to_unicode(unsigned char *gsm7bit, int length, char *unico
   w = 0;
   for (r = 0; r < length; r++)
   {
+    // check for buffer overflow
+    if (w >= generalWorkBuffLength) {
+      overFlow = true;
+      unicode[w] = 0;  // add end marker
+      return w;
+    }
 #ifdef PM
     if ((pgm_read_byte(lookup_gsm7toUnicode + gsm7bit[r]) != 27))
     {
@@ -526,7 +535,6 @@ int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode)
   int w;
   int length;
   unsigned char gsm7bit[(numSeptets * 8) / 7];
-  //  unsigned char gsm7bit[161];
   // first decompress the 7-bit characters into octets
   w = 0;
   int index = 0; // index into the string
@@ -568,6 +576,7 @@ bool PDU::decodePDU(const char *pdu)
   bool udhPresent;
 
   unsigned char X;
+  overFlow = false;
   i = decodeAddress(pdu, scabuff, OCTETS);
   if (i == 0)
   {
@@ -600,7 +609,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2;
   int utflength = 0, utfoffset;
   unsigned short ucs2;
-  *utf8buff = 0;
+  *generalWorkBuff = 0;
   if (udhPresent)
   {
     int udhlength = gethex(&pdu[index]);
@@ -655,9 +664,9 @@ bool PDU::decodePDU(const char *pdu)
   {
   case DCS_7BIT_ALPHABET_MASK:
     outindex = 0;
-    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)utf8buff);
-    utf8buff[i] = 0;
-    meslength = i;
+    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff);
+    generalWorkBuff[i] = 0;
+  //  utf8length = i;
     rc = true;
     break;
   case DCS_8BIT_ALPHABET_MASK:
@@ -671,11 +680,16 @@ bool PDU::decodePDU(const char *pdu)
       pdu_to_ucs2(&pdu[index], 2, &ucs2); // treat 2 octets
       index += 4;
       dulength -= 2;
-      utflength = ucs2_to_utf8(ucs2, utf8buff + utfoffset);
+      utflength = ucs2_to_utf8(ucs2, generalWorkBuff + utfoffset);
+      // check for overflow
+      if ((utfoffset + utflength) >= generalWorkBuffLength) {
+        overFlow = true;
+        break;
+      }
       utfoffset += utflength;
     }
-    meslength = utfoffset;
-    utf8buff[utfoffset] = 0; // end marker
+  //  utf8length = utfoffset;
+    generalWorkBuff[utfoffset] = 0; // end marker
     rc = true;
     break;
   default:
@@ -879,7 +893,7 @@ const char *PDU::getTimeStamp()
 }
 const char *PDU::getText()
 {
-  return utf8buff;
+  return generalWorkBuff;
 }
 
 void PDU::BCDtoString(char *output, const char *input, int length)
@@ -973,7 +987,7 @@ const char *PDU::getSMS()
 
 void PDU::setSCAnumber(const char *n)
 {
-  strcpy(scanumber, n);
+  strcpy(scabuff, n);
 }
 
 const char *PDU::getSCAnumber()
@@ -1070,6 +1084,9 @@ int *PDU::getConcatInfo()
   return concatInfo;
 }
 
+bool PDU::getOverflow() {
+  return overFlow;
+}
 /****************************************************************************
 This lookup table converts from ISO-8859-1 8-bit ASCII to the
 7 bit "default alphabet" as defined in ETSI GSM 03.38

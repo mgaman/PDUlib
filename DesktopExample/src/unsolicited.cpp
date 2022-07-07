@@ -56,6 +56,8 @@ void unsolicited(int sp) {
                     std::cout << "SCA: " << mypdu.getSCAnumber() << std::endl;
                     std::cout << "Time: " << mypdu.getTimeStamp() << std::endl;
                     std::cout << "From: " << mypdu.getSender() << std::endl;
+                    if (mypdu.getOverflow())
+                        std::cout << "Warning: partial message only\n";
                     std::cout << "Message: " << mypdu.getText() << std::endl;
                 }
                 nextLineSMS = false;
