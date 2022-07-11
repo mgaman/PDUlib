@@ -12,7 +12,7 @@ SoftwareSerial GSM(2,3);  // UNO
 
 // adjust BUFFER_LENGTH until Encode completes successfulli
 
-#define BUFFER_LENGTH 200
+#define BUFFER_LENGTH 100
 PDU mypdu = PDU(BUFFER_LENGTH);
 char temp[30];
 

@@ -2,8 +2,8 @@
  * @file pdulib.cpp
  * @author David Henry (mgadriver@gmail.com)
  * @brief A general purpose libray for encoding/decoding PDU data for GSM modems
- * @version 0.5.1
- * @date 2022-03-25
+ * @version 0.5.5
+ * @date 2022-07-11
  *
  * @copyright Copyright (c) 2021
  *
@@ -27,6 +27,9 @@
           Issue #14 Add handling for User Data Header/Concatenated messages
   * 0.5.5 Change default compilation model from Desktop to Arduino. Necessitated by
         confusion as how to manipulate Arduino IDE preferences
+        Reduce RAM by replacing 2 static buffers by 1 user defined buffer. Default size 100 bytes can be over-ridden
+        in the PDU constructor.
+        Add the getOverflow method
  */
 
 #ifndef DESKTOP_PDU

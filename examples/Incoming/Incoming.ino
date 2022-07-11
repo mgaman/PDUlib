@@ -6,7 +6,7 @@ SoftwareSerial GSM(2,3);  // UNO
 //SoftwareSerial GSM(10,11);  // Mega2560
 
 // Adjust BUFFER_SIZE until the buffer overflow message goes away
-#define BUFFER_SIZE 200
+#define BUFFER_SIZE 100
 PDU mypdu=PDU(BUFFER_SIZE);
 
 #define BUF_SIZE 340 // at least 340 for a full length message

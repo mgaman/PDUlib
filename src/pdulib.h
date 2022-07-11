@@ -2,8 +2,8 @@
  * @file pdulib.h
  * @author David Henry (mgadriver@gmail.com)
  * @brief Encode/Decode PDU data 
- * @version 0.5.1
- * @date 2022-03-25
+ * @version 0.5.5
+ * @date 2022-07-11
  * 
  * @copyright Copyright (c) 2021
  * 
@@ -14,6 +14,7 @@
  *       Default GSM7 now fully supported
  * 0.5.4 Add getConcatInfo method to support concatenated messages
  * 0.5.5 Place PROGMEM option here (if desired)
+ *       Add buffer size option to PDU constructor
  */
 
 //#define PM   // uncomment to implement Arduino PROGMEM feature
