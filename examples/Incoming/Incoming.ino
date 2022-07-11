@@ -5,7 +5,9 @@
 SoftwareSerial GSM(2,3);  // UNO
 //SoftwareSerial GSM(10,11);  // Mega2560
 
-PDU mypdu=PDU();
+// Adjust BUFFER_SIZE until the buffer overflow message goes away
+#define BUFFER_SIZE 200
+PDU mypdu=PDU(BUFFER_SIZE);
 
 #define BUF_SIZE 340 // at least 340 for a full length message
 char linebuf[BUF_SIZE];
@@ -19,7 +21,7 @@ void setup() {
 #else
   Serial.println("Not using PM");
 #endif
-
+  Serial.print("Buffer Size ");Serial.println(BUFFER_SIZE);
   GSM.begin(9600);
   Serial.println("Send me text messages.. now  ");
 }
@@ -28,7 +30,10 @@ void processLine() {
   //Serial.print(linebuf);
   if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
+      if (mypdu.getOverflow())
+        Serial.println("Buffer Overflow, partial message only");
       Serial.print("From: "); Serial.println(mypdu.getSender());
+      Serial.print("Timestamp: "); Serial.println(mypdu.getTimeStamp());
       Serial.print("Msg: "); Serial.println(mypdu.getText());
       // is this standalone or multi-part ?
       int *concat = mypdu.getConcatInfo();

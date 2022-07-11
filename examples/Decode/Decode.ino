@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <pdulib.h>
 
-
-PDU mypdu = PDU();
+// adjust BUFFER_SIZE until the overflow message goes away
+#define BUFFER_SIZE 100
+PDU mypdu = PDU(BUFFER_SIZE);
 // Not enough RAM to do all examples in one go, so just uncomment one of the following
 #define PART1
 //#define PART2
@@ -47,9 +48,14 @@ void setup() {
 #else
   Serial.println("Not using PM");
 #endif
+  Serial.print("Buffer Size "); Serial.println(BUFFER_SIZE);
+
   for (unsigned long i=0; i< sizeof(inpdu)/sizeof(const char *); i++) {
     if (mypdu.decodePDU(inpdu[i])) {
       Serial.println("-------------------------------");
+      if (mypdu.getOverflow()) {
+        Serial.println("Buffer Overflow, partial message only");
+      }
       Serial.print("SCA ");Serial.println(mypdu.getSCAnumber());
       Serial.print("Sender ");Serial.println(mypdu.getSender());
       Serial.print("Timestamp ");Serial.println(mypdu.getTimeStamp());
@@ -65,8 +71,8 @@ void setup() {
     }
     else
     {
-      Serial.println("rejected");
-      Serial.print("Sender ");Serial.println(mypdu.getSender());
+      Serial.println("Decode failed");
+//      Serial.print("Sender ");Serial.println(mypdu.getSender());
     }
   }
 }

@@ -7,14 +7,20 @@ Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means 
 This implementation partially processes the User Data Header (UDH). The practical implication of this is that concatenated messages are supported but media or national language extensions are not supported.
 ## Target audience
 The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
+# Constructor
+<b>PDU()</b>  
+<b>PDU(unsigned int)</b>  
+The optional parameter is the size, in bytes, of the buffer used to encode/decode PDU's. Default is 100 bytes. To calculate the size suitable for your circumstances, see the [Buffer Size](*calculating-the-buffer-size) section below.  
+For the sake of minimizing RAM usage, the same buffer is used for both incoming and outgoing messages. Do not try to do both simultaneously.  
+You will have to play with *getOverflow* and different buffer sizes to find the number suitable for your circumstances. If your code both sends and receives messages the buffer size must be the maximum of that needed for incoming/outgoing.
 # API
 ## decodePDU
 <b>bool decodePDU(const char *pdu)</b>  
 If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displayed as.  
 +CMT: nn    where nn is length  
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
-After decoding the PDU its constituent parts can be recovered with the following methods.  
-Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS).
+After decoding the PDU its constituent parts can be recovered with the methods below.    
+Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). Call *getOverflow* to see if a buffer overflow is the problem. It will then still be possible to retrieve part of the message.
 ## getConcatInfo
 <b>int *getConcatInfo()</b>  
 To be called after calling **decodePDU**.  
@@ -46,7 +52,7 @@ Returns the body of an incoming message. Note that it is a UTF-8 string. In a De
 4. numParts. If specified this is part of a multi-part message. This specifies how many messages make up the entire message. numParts must be the same for all parts of the message.  
 5. partNumber. If specified this is part of a multi-part message. This specifies the index of this part in the whole message. The index starts from 1.  
 6. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).  
-A return value of -1 indicates that the message is longer than the maximum allowed.
+A return value of -1 indicates a fatal error. Call *getOverflow* to see if the error was a buffer overflow. If not an overflow it may be an error in the SCA or target phone number.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
 Before one can encode and send a PDU the number of the Service Centre must be known.  
@@ -55,11 +61,17 @@ AT+CSCA?
 ## getSMS  
 <b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
+## getOverflow
+<b>bool getOverflow()</b>
+### After Encode
+Call *getOverflow* after *Encode*. If the result is *true* then there was not enough space in the buffer to create the message. This is fatal and the message cannot be sent.
+### After Decode
+Call *getOveflow* after *Decode*. If *true* there was not enough space in the buffer to fully decode the message. Calling *getText* will show that part which could be decoded.
 # Development and Debugging
 My development environment is VS Code/PlatformIO on Ubuntu. It is basically an Arduino environment which means that while I get
 some goodies such as Intellisense these are no debugging facilities such as breakpoints and watch. As pdulib is pure C++ I had to adopt another strategy to debug the same pdulib sources, but in their desktop environment. This is described later.
 ## Arduino Development
-New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and libray folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you creater a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
+New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and libray folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you create a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
 The macro **PM**, if set, will place translation tables in flash memory. The method of setting this macro is different for PlatformIO and Arduino IDE and is described below.
 ### PlatformIO
 To add compiler switches, add the following line to the **platformio.ini** file, **env** section.
@@ -250,3 +262,26 @@ It is permitted to mix GSM7 and non-GSM7 parts.
 ## Receiving
 After receiving a message, use the <b>getConcatInfo</b> to discover if this is a standalone message or part of a multi-part message.  
 Note that multi-parts may not necessarily arrive in ascending order of partNumber.
+# Calculating the buffer size
+The code uses a single buffer for both encoding (UTF8 to PDU) and decoding (PDU to UTF8). The amount of space you need is dictated by the length of messages and the language used.
+## Outgoing Message
+The code first creates a PDU in binary format. This is then converted to a PDU in printable format whose length is double that of the binary veersion. 
+### Example 
+As a crude rule of thumb the size of an outgoing message is about 30 bytes of overhead plus payload. The size of the payload (non GMS7) is 2 bytes per character or 4 bytes per surrogate pair (like Emojis). A message of 20 characters thus needs about 30+(20x2) or 70 bytes. These 70 bytes then need to be converted to a printable, hexadecimal, string. The final buffer is then 2x70 or 140 bytes.
+## Incoming Message
+Read this link [here](https://en.wikipedia.org/wiki/UTF-8#Encoding).  
+The PDU contains Unicode characters that get converted to UTF8. Most European/Semitic languages convert to 2 UTF8 bytes while Asian languages convert to 3 UTF8 bytes. Surrogate pairs like Emojis convert to 4 UTF bytes.
+### Example
+An incoming message contains 30 characters in English and Arabic plus 1 emoji. The space needed is then (30x2)+4 == 64 bytes.  
+An incoming message contains 30 characters of Kanji plus 1 emoji. The space needed is (30x3)+4 = 94 bytes.
+# Version History
+## 0.5.2
+First major release with basic functionality.
+## 0.5.3
+A few bug fixes.
+## 0.5.4
+Added support for Concatenated Messages.
+## 0.5.5
+Reduce RAM usage by replacing 2 static buffers (for incoming and outgoing messages) by 1 dynamic working buffer used by both. The buffer size may be defined in the PDU constructor.  
+The new method *getOverflow* is used to discover when encode/decode has overflowed the working buffer. The user is encouraged to use this when determining the optional buffer size for his project.  
+The requirement for the Arduino user to modify his compilation environment proved to be confusing and has been dropped. The method to save RAM by putting translation tables into flash has been simpified.

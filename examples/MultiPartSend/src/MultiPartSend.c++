@@ -8,9 +8,12 @@ bool haveSCA = false;
 
 SoftwareSerial gsm(2,3);
 //SoftwareSerial gsm(10,11);
-PDU mypdu = PDU();
 
-#define SEND_MULTI_PART // uncomment to send multipart, comment to send standalone messages
+// adjust BUFFER_SIZE until buffer overlow message goes away
+#define BUFFER_SIZE 80
+PDU mypdu = PDU(BUFFER_SIZE);
+
+//#define SEND_MULTI_PART // uncomment to send multipart, comment to send standalone messages
 char newMessage[30];
 
 const char *messages[] = {
@@ -19,7 +22,7 @@ const char *messages[] = {
 #else
   "Not using PM\r\n",
 #endif
-  "Line 1\r\n",  // 7 bit alphabet
+  "Line 1\r\nplus more stuff",  // 7 bit alphabet
   "שורה 2",  // 16 bit alphabet
   "😃",  // Surrogate pair
   newMessage    // filled in later
@@ -29,6 +32,12 @@ unsigned short refNumber = 99;
 
 void setup() {
   Serial.begin(9600);
+#ifdef PM
+  Serial.println("Using PM");
+#else
+  Serial.println("Not using PM");
+#endif
+  Serial.print("Buffer Size ");Serial.println(BUFFER_SIZE);
   gsm.begin(9600);
 }
 
@@ -71,6 +80,10 @@ void SendSMS(const char *sms, int len) {
 void loop() {
   int len;
   int numMessages = sizeof(messages)/sizeof(const char *);
+  if (once)
+    return;
+  else
+    once = true;
   sprintf(newMessage,"\r\nMessage %d",refNumber);  // update message
   gsm.flush();
   mypdu.setSCAnumber(SCAnumber);
@@ -82,9 +95,11 @@ void loop() {
     len = mypdu.encodePDU(Target,messages[n]);
 #endif
     if (len == -1){
-      Serial.print("Message ");
+      Serial.print("Encode Message ");
       Serial.print(n+1);
-      Serial.println(" too long");
+      Serial.println(" failed");
+      if (mypdu.getOverflow())
+        Serial.println("Buffer Overflow");
     }
     else {
       SendSMS(mypdu.getSMS(),len);

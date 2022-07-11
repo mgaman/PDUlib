@@ -14,6 +14,10 @@ getSCAnumber	KEYWORD2
 getSender	KEYWORD2
 getTimeStamp	KEYWORD2
 getText	KEYWORD2
+# method for checking on buffer overflows
+getOverflow KEYWORD2
+# methods for getting information on concatenated getText
+getConcatInfo KEYWORD2
 # Helpers to build a string to send
 buildUtf16  KEYWORD2
 buildUtf  KEYWORD2

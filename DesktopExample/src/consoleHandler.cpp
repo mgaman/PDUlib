@@ -25,7 +25,8 @@ const char *message[] = {
   "12345678",   // 4 gsm 7 bit 8 characters
   "1234567",   // 5 7 gsm 7 bit 7 character
   "ABC\015\012New Line",  // 6 GSM 7 bit with CR/LF
-  "אָאַאְאּאִאֶאֵאֹאֻאֲאֳאֱאׁאׂאֿ"  // 7 nikkud
+  "אָאַאְאּאִאֶאֵאֹאֻאֲאֳאֱאׁאׂאֿ",  // 7 nikkud  each char is surrogate pair i.e. 4 bytes will overflow
+  "אָאַאְאּאֵ"  // 8 nikkud  each char is surrogate pair i.e. 4 bytes
 };
 
 struct sCM {
@@ -33,7 +34,7 @@ struct sCM {
   const char *mlist[] ;
 };
 sCM concatMessage1 = { 6,{
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZ\r\n", // gsm 7
+  "ABCDEFGHIJKLMNOPQRSTUVW\r\n", // gsm 7
   "0123456789\r\n",  // gsm 7
   "Third line\r\n",  // gsm 7
   "Fourth Line\r\n",  // gsm 7
@@ -51,7 +52,7 @@ void consoleHandler(int sp) {
     while (true) {
         std::cin.getline(linein,sizeof(linein));
         switch (linein[0]) {
-            case '0' ... '7':
+            case '0' ... '8':
               sendSMS(sp,linein[0]-'0');
               break;
             case 'c':
@@ -84,8 +85,11 @@ void waiton(int n) {
 void sendSMS(int sp, int i) {
   // mypdu.setSCAnumber(SCAnumber);  // already set in unsolicited.cpp
   int len = mypdu.encodePDU(Target,message[i]);
-  if (len == -1)
-    std::cout << "Message too long\n";
+  if (len == -1) {
+    std::cout << "Encode failed\n";
+    if (mypdu.getOverflow())
+      std::cout << "Encode buffer overflow\n";
+  }
   else {
     sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
     write(sp,writeBuf,strlen(writeBuf));
@@ -108,8 +112,12 @@ void sendConcat(int sp,sCM *pMess){
     //mypdu.setSCAnumber(SCAnumber);   // already set in unsolicited.cpp
     //std::cout << pMess->mlist[i] << " " << pMess->llist << " " << i+1 << std::endl;
     int len = mypdu.encodePDU(Target,pMess->mlist[i],refnum,pMess->llist,i+1);
-    if (len == -1)
-      std::cout << "Message too long\n";
+    if (len == -1) {
+      std::cout << "Encode failed\n";
+      if (mypdu.getOverflow()) {
+        std::cout << "Buffer overflow\n";
+      }
+    }
     else {
       sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
       write(sp,writeBuf,strlen(writeBuf));

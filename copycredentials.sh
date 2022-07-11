@@ -11,8 +11,8 @@ current=$PWD
 for d in $dirs
 do
 	cd $current
-	cp DesktopExample/src/credentials.h examples/$d/src
-	cp DesktopExample/src/credentials.h examples/$d
+	cp DesktopExample/src/credentials.h examples/$d/src  # platformIO
+	cp DesktopExample/src/credentials.h examples/$d      # Arduino
 done
 echo 'All done'
 

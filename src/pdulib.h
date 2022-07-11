@@ -77,7 +77,7 @@ enum eAddressType {INTERNATIONAL_NUMERIC,NATIONAL_NUMERIC,ALPHABETIC};
 enum eLengthType {OCTETS,NIBBLES};  // SCA is in octets, sender/recipient nibbles
 /**
  * @brief PDU class, provides methods to decode a PDU message or encode a new one
- * @param None There are no parameters for the constructor
+ * @param Optional Size of encode / decode work area
  * 
  */
 class PDU
@@ -210,21 +210,21 @@ public:
   bool getOverflow();
 private:
   bool overFlow;
-  // following for storing decode fields of incoming messages
   int scalength;
-  char scabuff[MAX_NUMBER_LENGTH]; // both incoming and outgoing SCA
+  char scabuffin[MAX_NUMBER_LENGTH]; // for incominging SCA
+  char scabuffout[MAX_NUMBER_LENGTH]; // for outgoing SCA
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
 //  int utf8length;
-  int generalWorkBuffLength;  // static size of utf8buff
+  int generalWorkBuffLength;  // static size of encode/decode work area
   char *generalWorkBuff;  // allocate dynamically
   int tslength;
   char tsbuff[20];    // big enough for timestamp
  // char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
   // following for buiulding an SMS-SUBMIT message - Binary not ASCII
-  int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
+ // int addressType;    // GSM 3.04     for building address part of SMS SUBMIT
   int smsOffset;
-  char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
+ // char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
   int concatInfo[3];
   unsigned char udhbuffer[8];
 
@@ -235,10 +235,10 @@ private:
   void BCDtoString(char *number, const char *pdu,int length);
   void digitSwap(const char *number, char *pdu);
   
-  int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int UDHsize);
+  int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int UDHsize, int availableSpace);
   int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii);
 
-  int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit, int udhsize);
+  int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit, int udhsize, int availableSpace);
   int convert_7bit_to_unicode(unsigned char *a7bit, int length, char *ascii);
 
   unsigned char gethex(const char *pc);
@@ -253,7 +253,7 @@ private:
   // get length of next utf8
 //  int utf8Length(const char *);
   int decodeAddress(const char *,char *, eLengthType);  // pdu to readable starts with length octet
-  bool setAddress(const char *,eAddressType,eLengthType);
+  bool setAddress(const char *,/*eAddressType,*/eLengthType, char *);
 //  bool isGSM7(unsigned short *pucs);  // UCS may be a surrogate pair
 
 //  //  Get SCA number for outgoing SMS

@@ -34,7 +34,7 @@ void consoleHandler(int sp);
 // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
 // must have been initialized with a call to tcgetattr() overwise behaviour
 // is undefined
-PDU mypdu = PDU(200);
+PDU mypdu = PDU();
 
 // prototypes
 void greekDecode(PDU);
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     //gsm7check(mypdu);
     //gsm7encode(mypdu);
     //UdhDecode(mypdu);
-    //bufOvflow(mypdu);
+    bufOvflow(mypdu);
     ///////////////////////////////////////////////
     if (argc != 2) {
         std::cout <<"Usage: pduapp serial_port\n\n";

@@ -4,13 +4,16 @@
 #include "credentials.h"
 /*******************************
  * 
- * Update credentials.h beore running this code
+ * Update credentials.h before running this code
  * 
  ******************************/
-//SoftwareSerial GSM(2,3);  // UNO
-SoftwareSerial GSM(10,11); // Mega2560
+SoftwareSerial GSM(2,3);  // UNO
+//SoftwareSerial GSM(10,11); // Mega2560
 
-PDU mypdu = PDU();
+// adjust BUFFER_LENGTH until Encode completes successfulli
+
+#define BUFFER_LENGTH 200
+PDU mypdu = PDU(BUFFER_LENGTH);
 char temp[30];
 
 #define ZERO 48    // 7 bit
@@ -24,7 +27,7 @@ char temp[30];
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
 
-#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
+//#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
 //#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
@@ -58,12 +61,14 @@ bool gotGT = false;
 
 void setup() {
   Serial.begin(9600);
+  while (!Serial){}
   GSM.begin(9600);
 #ifdef PM
   Serial.println("Using PM");
 #else
   Serial.println("Not using PM");
 #endif
+  Serial.print("Using buffer length "); Serial.println(BUFFER_LENGTH);
 }
 
 void loop() {
@@ -96,8 +101,10 @@ void loop() {
     strcat(final,"שלום");
 #endif
     int len = mypdu.encodePDU(Target,final);
-    if (len == -1) {
-      Serial.println("Message too long");
+    if (len == -1)  {
+      Serial.println("Encode Error");
+      if (mypdu.getOverflow())
+        Serial.println("Buffer Overflow");
     }
     else {
       sprintf(temp,"AT+CMGS=%d\r",len);
