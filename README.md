@@ -6,7 +6,8 @@ Encode/Decode PDU for sending/receiving SMS.
 Both the default GSM 7 bit and UCS-2 16 bit alphabets are supported which means that you can, in practice, send and receive in any language you want.  
 This implementation partially processes the User Data Header (UDH). The practical implication of this is that concatenated messages are supported but media or national language extensions are not supported.
 ## Target audience
-The code is written in plain C++ so it should be usable by both desktop and Arduino coders.
+The code is written in plain C++ so it should be usable by both desktop and Arduino coders.  
+Previous users of this library prior to version **0.5.5** are encouraged the read the version information [here](#055) regarding additions to the API and simplification for the Arduino IDE user.
 # Constructor
 <b>PDU()</b>  
 <b>PDU(unsigned int)</b>  
@@ -71,13 +72,17 @@ Call *getOverflow* after *Decode*. If *true* there was not enough space in the b
 My development environment is VS Code/PlatformIO on Ubuntu. It is basically an Arduino environment which means that while I get
 some goodies such as Intellisense these are no debugging facilities such as breakpoints and watch. As pdulib is pure C++ I had to adopt another strategy to debug the same pdulib sources, but in their desktop environment. This is described later.
 ## Arduino Development
-### PlatformIO
-New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and library folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you create a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
+### PlatformIO (Linux)
+New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and library folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you create a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  The **copysketches.sh** copies <sketchname>.c++ files to the correct place used by Arduino IDE and renames that file to <sketchname>.ino.  
+For those sketches that need credentials i.e SCA phone number and Target phone number, there is 1 master copy of **credentials.h** in the DesktopExample/src folder. The script **copycredentials.sh** copies that file into the correct place for PlatformIO and Arduino IDE.   
 The macro **PM**, if set, will place translation tables in flash memory.  
 To add compiler switches, add the following line to the **platformio.ini** file, **env** section.
 ```
 build_flags = -DPM
 ```
+
+### PlatformIO (non-Linux)
+Needs solutions to the **createSoftLinks.sh**, **copysketches.sh** and **copycredentials.sh** scripts. As I do not develop under Windows or IOS I have no intention of doing that work. Anyone else is invited to do that if needed.
 ### Arduino IDE
 Arduino IDE uses a different directory structure and has different rules for file names. Firstly the source files must be in the project root folder and the main file must be named \<sketchname\>.ino. Also any files with the suffix cpp will get compiled, hence the reason for renaming **main.cpp** to \<sketchname.c++\>. Simply copy src/\<sketchname\>.c++ to the root folder and change the suffix to ino.  
 The macro **PM**, if set, will place translation tables in flash memory.  
@@ -110,9 +115,9 @@ int main(int argc,char *argv[]) {
     //int len = myPDU.encodePDU("+12121234567","שלום");  
     int len = myPDU.encodePDU("+12121234567","hi there");  
     if (len == -1) {
-      println("Encode failed\n");
+      print("Encode failed\n");
       if (myPDU.getOverflow())
-        println("Buffer Overflow\n);
+        print("Buffer Overflow\n);
     }
     else {
       char temp[20];  
@@ -139,13 +144,13 @@ int main(int argc,char *argv[]) {
     // ensure that the modem is in PDU mode
     write(sp,"AT+CMGF=0\r",10); 
     if (!mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06"))
-      std::cout << "Decode Failed\n";
+      print("Decode Failed\n");
     else {
-      std::cout << mypdu.getSender() << std::endl;  // prints "+nnnnnnnnn"
-      std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
+      print(mypdu.getSender());  // prints "+nnnnnnnnn"
+      print(mypdu.getTimeStamp());  // prints "210918135712"
       if (mypdu.getOverflow())
-        std::cout << "Buffer Overflow, partial message only\n";
-      std::cout << mypdu.getText() << std::endl;  // prints "Hello"
+        print("Buffer Overflow, partial message only\n");
+      print(mypdu.getText());  // prints "Hello"
     }
 }  
 ```
@@ -294,12 +299,12 @@ Note that multi-parts may not necessarily arrive in ascending order of partNumbe
 # Calculating the buffer size
 The code uses a single buffer for both encoding (UTF8 to PDU) and decoding (PDU to UTF8). The amount of space you need is dictated by the length of messages and the language used.
 ## Outgoing Message
-The code first creates a PDU in binary format. This is then converted to a PDU in printable format whose length is double that of the binary veersion. 
+The code first creates a PDU in binary format. This is then converted to a PDU in printable format whose length is double that of the binary version. 
 ### Example 
 As a crude rule of thumb the size of an outgoing message is about 30 bytes of overhead plus payload. The size of the payload (non GMS7) is 2 bytes per character or 4 bytes per surrogate pair (like Emojis). A message of 20 characters thus needs about 30+(20x2) or 70 bytes. These 70 bytes then need to be converted to a printable, hexadecimal, string. The final buffer is then 2x70 or 140 bytes.
 ## Incoming Message
-Read this link [here](https://en.wikipedia.org/wiki/UTF-8#Encoding).  
-The PDU contains Unicode characters that get converted to UTF8. Most European/Semitic languages convert to 2 UTF8 bytes while Asian languages convert to 3 UTF8 bytes. Surrogate pairs like Emojis convert to 4 UTF bytes.
+Read this link about Unicode [here](https://en.wikipedia.org/wiki/UTF-8#Encoding).  
+The PDU contains Unicode characters that get converted to UTF8. Most European/Semitic languages convert 1 character to 2 UTF8 bytes while Asian languages convert 1 character to 3 UTF8 bytes. Surrogate pairs like Emojis convert to 4 UTF bytes.
 ### Example
 An incoming message contains 30 characters in English and Arabic plus 1 emoji. The space needed is then (30x2)+4 == 64 bytes.  
 An incoming message contains 30 characters of Kanji plus 1 emoji. The space needed is (30x3)+4 = 94 bytes.
@@ -311,6 +316,8 @@ A few bug fixes.
 ## 0.5.4
 Added support for Concatenated Messages.
 ## 0.5.5
-Reduce RAM usage by replacing 2 static buffers (for incoming and outgoing messages) by 1 dynamic working buffer used by both. The buffer size may be defined in the PDU constructor.  
+Reduce RAM usage by replacing 2 static buffers (for incoming and outgoing messages) by 1 user defined working buffer for both. The buffer size may be defined in the PDU constructor. (Issue #24)  
+A buffer overflow bug (Issue #22) was fixed.  
 The new method *getOverflow* is used to discover when encode/decode has overflowed the working buffer. The user is encouraged to use this when determining the optional buffer size for his project.  
-The requirement for the Arduino user to modify his compilation environment proved to be confusing and has been dropped. The method to save RAM by putting translation tables into flash has been simpified.
+The requirement for the Arduino user to modify his compilation environment proved to be confusing and has been dropped. (Issue #21)  
+The method to save RAM by putting translation tables into flash has been simplified, see [here](#arduino-ide).
