@@ -10,9 +10,9 @@ The code is written in plain C++ so it should be usable by both desktop and Ardu
 # Constructor
 <b>PDU()</b>  
 <b>PDU(unsigned int)</b>  
-The optional parameter is the size, in bytes, of the buffer used to encode/decode PDU's. Default is 100 bytes. To calculate the size suitable for your circumstances, see the [Buffer Size](*calculating-the-buffer-size) section below.  
+The optional parameter is the size, in bytes, of the buffer used to encode/decode PDU's. Default is 100 bytes. To calculate the size suitable for your circumstances, see the [Buffer Size](#calculating-the-buffer-size) section below.  
 For the sake of minimizing RAM usage, the same buffer is used for both incoming and outgoing messages. Do not try to do both simultaneously.  
-You will have to play with *getOverflow* and different buffer sizes to find the number suitable for your circumstances. If your code both sends and receives messages the buffer size must be the maximum of that needed for incoming/outgoing.
+You will have to play with [getOverflow](#getoverflow) and different buffer sizes to find the optimal number for your application. If your code both sends and receives messages the buffer size must be the maximum of that needed for incoming/outgoing.
 # API
 ## decodePDU
 <b>bool decodePDU(const char *pdu)</b>  
@@ -20,7 +20,7 @@ If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displ
 +CMT: nn    where nn is length  
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
 After decoding the PDU its constituent parts can be recovered with the methods below.    
-Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). Call *getOverflow* to see if a buffer overflow is the problem. It will then still be possible to retrieve part of the message.
+Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). **true** does not imply that then entire message was decoded. Call *getOverflow* to check if there was a buffer overflow. It will then still be possible to retrieve part of the message.
 ## getConcatInfo
 <b>int *getConcatInfo()</b>  
 To be called after calling **decodePDU**.  
@@ -66,25 +66,25 @@ This returns the address of the buffer created by **encodePDU**. The buffer alre
 ### After Encode
 Call *getOverflow* after *Encode*. If the result is *true* then there was not enough space in the buffer to create the message. This is fatal and the message cannot be sent.
 ### After Decode
-Call *getOveflow* after *Decode*. If *true* there was not enough space in the buffer to fully decode the message. Calling *getText* will show that part which could be decoded.
+Call *getOverflow* after *Decode*. If *true* there was not enough space in the buffer to fully decode the message. Calling *getText* will show that part which could be decoded.
 # Development and Debugging
 My development environment is VS Code/PlatformIO on Ubuntu. It is basically an Arduino environment which means that while I get
 some goodies such as Intellisense these are no debugging facilities such as breakpoints and watch. As pdulib is pure C++ I had to adopt another strategy to debug the same pdulib sources, but in their desktop environment. This is described later.
 ## Arduino Development
-New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and libray folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you create a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
-The macro **PM**, if set, will place translation tables in flash memory. The method of setting this macro is different for PlatformIO and Arduino IDE and is described below.
 ### PlatformIO
+New sketches (projects) are created via PlatformIO which then creates a directory structure of source, include and library folders. Each sketch has its own libraries so to ensure that every sketch uses the same physical copy of pdulib sources. The **createSoftLinks.sh** script achieves this and must be run just once after cloning this workspace from Github. If you create a new sketch, edit **createSoftLinks.sh**, add the new sketch and run again. Note that PlatformIO, by default, creates a main file called **main.cpp**. If you create a new sketch, rename this file to \<sketchname\>.c++.  
+The macro **PM**, if set, will place translation tables in flash memory.  
 To add compiler switches, add the following line to the **platformio.ini** file, **env** section.
 ```
 build_flags = -DPM
 ```
 ### Arduino IDE
+Arduino IDE uses a different directory structure and has different rules for file names. Firstly the source files must be in the project root folder and the main file must be named \<sketchname\>.ino. Also any files with the suffix cpp will get compiled, hence the reason for renaming **main.cpp** to \<sketchname.c++\>. Simply copy src/\<sketchname\>.c++ to the root folder and change the suffix to ino.  
+The macro **PM**, if set, will place translation tables in flash memory.  
 Edit the **pdu.h** file, uncomment the line to enable PM
 ```
 //#define PM
 ```
-Arduino IDE uses a different directory structure and has different rules for file names. Firstly the source files must be in the project root folder and the main file must be named \<sketchname\>.ino. Also any files with the suffix cpp will get compiled, hence the reason for naming **main.cpp** to \<sketchname.c++\>. Simply copy src/\<sketchname\>.c++ to the root folder and change the suffix to ino.  
-
 ## Desktop Development
 As this is a PlatformIO oriented workspace you cannot directly compile and debug in the VS Code environment. First compile externally by invoking **make** from the command line in the pdulib directory. Note that the Makefile is configured to include the pdulib sources. Once compiled the app can be debugged in normal fashion **Run/Start Debugging** menu of VS Code. Don't panic if you get an error message that Debug cannot find a target. In the top left hand corner of the screen you will see a green arrow and a drop down list of debug target, select Debug(pdulib) and click the green arrow. You are now in a classic C++ debug environment, breakpoints and all.
 # Desktop GSM Modem Setup
@@ -97,8 +97,8 @@ Read the main() code in phonetester.cpp.
 This is C++ pseudo code. Note that I have ignored the issue of parsing data coming from the modem via the serial port, which is outside the scope of this document.
 ```
 #include <pdulib.h>
+PDU mypdu = PDU(nnn);  // where nnn is a suitable buffer size 
 int main(int argc,char *argv[]) {  
-    PDU mypdu = PDU(); 
     sp = open(argv[1], O_RDWR);  
     // ensure that the modem is in PDU mode
     write(sp,"AT+CMGF=0\r",10); 
@@ -109,11 +109,18 @@ int main(int argc,char *argv[]) {
     // create an SMS buffer  
     //int len = myPDU.encodePDU("+12121234567","שלום");  
     int len = myPDU.encodePDU("+12121234567","hi there");  
-    char temp[20];  
-    sprintf(temp,"AT+CMGS=%d\r",len); // create the command 
-    write(sp,temp,strlen(temp));    // write command to modem  
-    sleep(1);   // wait for > response to pass  
-    write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
+    if (len == -1) {
+      println("Encode failed\n");
+      if (myPDU.getOverflow())
+        println("Buffer Overflow\n);
+    }
+    else {
+      char temp[20];  
+      sprintf(temp,"AT+CMGS=%d\r",len); // create the command 
+      write(sp,temp,strlen(temp));    // write command to modem  
+      sleep(1);   // wait for > response to pass  
+      write(sp,mypdu.getSMS(),strlen(mypdu.getSMS));  // write the whole buffer to the serial port  
+    }
 }  
 ```
 ## Typical Usage Receiving an SMS
@@ -126,15 +133,20 @@ arrived from the GSM modem via the serial port. The code below would print out t
 Note it is not necessary to save the SCA number if just handling incoming messages.
 ```
 #include <pdulib.h>
+PDU mypdu = PDU(nnn);   // where nnn is a suitable buffer size 
 int main(int argc,char *argv[]) {
-    PDU mypdu = PDU(); 
     sp = open(argv[1], O_RDWR);  
     // ensure that the modem is in PDU mode
     write(sp,"AT+CMGF=0\r",10); 
-    mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06");
-    std::cout << mypdu.getSender() << std::endl;  // prints "+nnnnnnnnn"
-    std::cout << mypdu.getText() << std::endl;  // prints "Hello"
-    std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
+    if (!mypdu.decodePDU("07917952140230F2040C917952xxxxxxxx00001290813175212105C8329BFD06"))
+      std::cout << "Decode Failed\n";
+    else {
+      std::cout << mypdu.getSender() << std::endl;  // prints "+nnnnnnnnn"
+      std::cout << mypdu.getTimeStamp() << std::endl;  // prints "210918135712"
+      if (mypdu.getOverflow())
+        std::cout << "Buffer Overflow, partial message only\n";
+      std::cout << mypdu.getText() << std::endl;  // prints "Hello"
+    }
 }  
 ```
 ## buildUtf
@@ -147,7 +159,7 @@ examples see https://en.wikipedia.org/wiki/List_of_Unicode_characters .
 ### Example
 ```
 #include <pdulib.h>
-PDU mypdu = PDU();
+PDU mypdu = PDU(nnn);  // where nnn is a suitable buffer size
 char finalMsg[50]; // assemble final message here
 char tempbuf[10];  // temporary workspace
 
@@ -168,8 +180,12 @@ int main() {
   // now carry on as normal
   mypdu.setSCAnumber("+12125557777");
   int len = mypdu.encodePDU("+12125556666",finalMsg);
+  if (mypdu.getOverflow())
+    print("Encode failed, buffer overflow\n");
+  else {
   ....
   ....
+  }
 }
 ```   
 # Desktop Example
@@ -193,15 +209,21 @@ a larger device e.g. Mega2560 this may not be necessary.
 #include <Arduino.h>
 #include <pdulib.h>
 
-PDU mypdu = PDU();
+PDU mypdu = PDU(nnn);  // where nnn is a suitable number
+
 void setup() {
   char temp[20];
   Serial.begin(9600);
-  mypdu.decodePDU("07917777140230F2040C9188885419999900001280018153832106D17B594ECF03");
-  Serial.println(mypdu.getSCAnumber());
-  Serial.println(mypdu.getSender());
-  Serial.println(mypdu.getTimeStamp());
-  Serial.println(mypdu.getText());
+  if (mypdu.decodePDU("07917777140230F2040C9188885419999900001280018153832106D17B594ECF03")) {
+    Serial.println(mypdu.getSCAnumber());
+    Serial.println(mypdu.getSender());
+    Serial.println(mypdu.getTimeStamp());
+    if (mypdu.getOverflow())
+      Serial.println("Buffer Overflow, partial message only");
+    Serial.println(mypdu.getText());
+  }
+  else
+    Serial.println("Decode failed");
 }
 
 void loop() {
@@ -214,15 +236,15 @@ void loop() {
 #include <pdulib.h>
 
 SoftwareSerial GSM(2,3);
+PDU mypdu = PDU(nnn);   // where nnn is a suitable buffer size
 
 // example receiver phone numbers
 const char *nat = "*********";   // national phone number
 const char *intl = "+*********";   // international phone number
 // example messages
-const char *allascii = "Hello";
-const char *notascii = "שלום";
+const char *allGSM7 = "Hello";
+const char *notGSM7 = "שלום";
 
-PDU mypdu = PDU();
 void setup() {
   char temp[20];
   Serial.begin(9600);
@@ -230,13 +252,20 @@ void setup() {
   GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
   delay(1000);
   mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here
-  int len = mypdu.encodePDU(nat,notascii); 
-  Serial.print("SMS length ");Serial.println(len);
-  Serial.println(mypdu.getSMS());
-  sprintf(temp,"AT+CMGS=%d\r",len); // create SMS submit command
-  GSM.print(temp);           // issue SMS submit command
-  delay(1000);               // wait for > prompt to pass
-  GSM.print(mypdu.getSMS()); // send the message
+  int len = mypdu.encodePDU(nat,notGSM7); 
+  if (len == -1) {
+    Serial.println("Encode failed");
+    if (mypdu.getOverflow())
+      Serial.println("Buffer Overflow");
+  }
+  else {
+    Serial.print("SMS length ");Serial.println(len);
+    Serial.println(mypdu.getSMS());
+    sprintf(temp,"AT+CMGS=%d\r",len); // create SMS submit command
+    GSM.print(temp);           // issue SMS submit command
+    delay(1000);               // wait for > prompt to pass
+    GSM.print(mypdu.getSMS()); // send the message
+  }
 }
 
 void loop() {
