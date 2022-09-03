@@ -963,6 +963,11 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do this before calling BCDtoString
       break;
+    case 3: // Network specific number
+      BCDtoString(output, pdu, addressLength);
+      if ((addressLength & 1) == 1) // if odd, bump 1
+        addressLength++;            // we could do this before calling BCDtoString
+      break;
     case 5: // alphabetic, convert  nibble length to septets
       pduGsm7_to_unicode(pdu, (addressLength * 4) / 7, output);
       if ((addressLength & 1) == 1) // if odd, bump 1
