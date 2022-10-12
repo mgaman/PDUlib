@@ -21,7 +21,8 @@ If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displ
 +CMT: nn    where nn is length  
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
 After decoding the PDU its constituent parts can be recovered with the methods below.    
-Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). **true** does not imply that then entire message was decoded. Call *getOverflow* to check if there was a buffer overflow. It will then still be possible to retrieve part of the message.
+Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). **true** does not imply that then entire message was decoded. Call *getOverflow* to check if there was a buffer overflow. It will then still be possible to retrieve part of the message.  
+<b>CAVEAT</b> pdu MUST be all uppercase. I have had reports that some modems show characters A to F in lowercase. Until I address this in code, the user must take the necessary action.  
 ## getConcatInfo
 <b>int *getConcatInfo()</b>  
 To be called after calling **decodePDU**.  
@@ -321,3 +322,18 @@ A buffer overflow bug (Issue #22) was fixed.
 The new method *getOverflow* is used to discover when encode/decode has overflowed the working buffer. The user is encouraged to use this when determining the optional buffer size for his project.  
 The requirement for the Arduino user to modify his compilation environment proved to be confusing and has been dropped. (Issue #21)  
 The method to save RAM by putting translation tables into flash has been simplified, see [here](#arduino-ide).
+## 0.5.6
+Update Readme to address issues of lowercase output from GSM modems and Network Specific Numbers.  
+No changes to code from 0.5.5
+# Open Issues
+## Network Specific Number
+It has been reported that network specific numbers in incoming messages can be treated the same as a national number i.e. at line 961 in pdulib.cpp change
+```
+case 2:  // national number
+```
+to:
+```
+case 2: // national number
+case 3: // network specific number
+```
+As I have not found a way of testing this I am not going to change the source.  However you are free to adopt the above method.
