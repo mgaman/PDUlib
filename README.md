@@ -334,6 +334,7 @@ case 2:  // national number
 to:
 ```
 case 2: // national number
+[[fallthrough]];
 case 3: // network specific number
 ```
 As I have not found a way of testing this I am not going to change the source.  However you are free to adopt the above method.
