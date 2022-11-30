@@ -28,8 +28,8 @@ Returns **true** after a successful decode, else **false**. False may be for a n
 To be called after calling **decodePDU**.  
 Returns a pointer to an array of 3 integers that lists the concatenation data of the message. If any part of the array is zero, it is a standalone message, not part of a concatenated message.  
 index 0 - reference number of the message.  
-index 1 - Total number of parts in this message.  
-index 2 - Part number (starts from 1).  
+index 1 - Part number (starts from 1).  
+index 2 - Total number of parts in this message.  
 
 Note that a multi-part message may not necessarily arrive in order of part numbers. It is your responsibility to keep track of
 concatenation information in order to reconstruct the complete, original, message. 
@@ -325,16 +325,13 @@ The method to save RAM by putting translation tables into flash has been simplif
 ## 0.5.6
 Update Readme to address issues of lowercase output from GSM modems and Network Specific Numbers.  
 No changes to code from 0.5.5
+## 0.5.7
+Fixed issues #26,#29
 # Open Issues
 ## Network Specific Number
-It has been reported that network specific numbers in incoming messages can be treated the same as a national number i.e. at line 961 in pdulib.cpp change
-```
-case 2:  // national number
-```
-to:
+It has been reported that network specific numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 3:* statement in *PDU::decodeAddress* (pdulib.cpp line 963).
 ```
 case 2: // national number
 [[fallthrough]];
-case 3: // network specific number
+//case 3: // network specific number
 ```
-As I have not found a way of testing this I am not going to change the source.  However you are free to adopt the above method.

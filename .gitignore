@@ -19,3 +19,5 @@ DesktopExample/src/gsm7check.o
 src/ucs2.txt
 output/main
 main.map
+DesktopExample/src/bugtest.o
+DesktopExample/src/udh.o

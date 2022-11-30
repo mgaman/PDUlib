@@ -30,6 +30,7 @@
         Reduce RAM by replacing 2 static buffers by 1 user defined buffer. Default size 100 bytes can be over-ridden
         in the PDU constructor.
         Add the getOverflow method
+  * 0.5.7 Fix issues #26
  */
 
 #ifndef DESKTOP_PDU
@@ -959,6 +960,8 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
       *output++ = '+'; // add prefix and fall through
       [[fallthrough]];
     case 2: // national number
+      [[fallthrough]];
+    //case 3: // network specific number
       BCDtoString(output, pdu, addressLength);
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do this before calling BCDtoString
