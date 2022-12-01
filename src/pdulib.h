@@ -15,6 +15,7 @@
  * 0.5.4 Add getConcatInfo method to support concatenated messages
  * 0.5.5 Place PROGMEM option here (if desired)
  *       Add buffer size option to PDU constructor
+ * 0.5.7 Bug fixes Issues 27,28,30
  */
 
 //#define PM   // uncomment to implement Arduino PROGMEM feature
@@ -237,7 +238,7 @@ private:
   void digitSwap(const char *number, char *pdu);
   
   int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int UDHsize, int availableSpace);
-  int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii);
+  int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii,char firstchar);
 
   int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit, int udhsize, int availableSpace);
   int convert_7bit_to_unicode(unsigned char *a7bit, int length, char *ascii);

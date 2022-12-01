@@ -22,12 +22,12 @@ If using a GSM modem, in PDU mode **not TEXT mode** an incoming message is displ
 XXXXXXXXX   where XXXXXX is a string of hexadecimal character. It is this line that should be decoded.  
 After decoding the PDU its constituent parts can be recovered with the methods below.    
 Returns **true** after a successful decode, else **false**. False may be for a number of reasons e.g. corrupted data or an unsupported format such as Multi-Media (MMS). **true** does not imply that then entire message was decoded. Call *getOverflow* to check if there was a buffer overflow. It will then still be possible to retrieve part of the message.  
-<b>CAVEAT</b> pdu MUST be all uppercase. I have had reports that some modems show characters A to F in lowercase. Until I address this in code, the user must take the necessary action.  
+~~<b>CAVEAT</b> pdu MUST be all uppercase. I have had reports that some modems show characters A to F in lowercase. Until I address this in code, the user must take the necessary action.~~  Fixed in 0.5.7  
 ## getConcatInfo
 <b>int *getConcatInfo()</b>  
 To be called after calling **decodePDU**.  
-Returns a pointer to an array of 3 integers that lists the concatenation data of the message. If any part of the array is zero, it is a standalone message, not part of a concatenated message.  
-index 0 - reference number of the message.  
+Returns a pointer to an array of 3 integers that lists the concatenation data of the message. If indices 1 or 2 of the array are zero, it is a standalone message, not part of a concatenated message.  
+index 0 - Reference number of the message, may be zero.  
 index 1 - Part number (starts from 1).  
 index 2 - Total number of parts in this message.  
 
@@ -48,12 +48,15 @@ Returns the body of an incoming message. Note that it is a UTF-8 string. In a De
 ## encodePDU
 <b>int encodePDU(const char *recipient,const char *message)</b>  
 <b>int encodePDU(const char *recipient,const char *message, unsigned short refNumber,unsigned char numParts,unsigned char partNumber)</b>  
+### Parameters
 1. recipient. The phone number of the recipient. It must conform to the following format, numeric only, no embedded white space. An international number must be preceded by '+'.
 2. message. The body of the message, in UTF-8 format. This is typically what gets typed in from any keyboard driver. The code will scan the message to deduce if it is all GSM 7 bit, or not. If all GSM 7 bit then the maximum message length allowed is 160 characters, else 70 CSU-2 symbols.
 3. refNumber. If specified this is part of a multi-part message. refNumber must be the same for all parts of the message.  
 4. numParts. If specified this is part of a multi-part message. This specifies how many messages make up the entire message. numParts must be the same for all parts of the message.  
 5. partNumber. If specified this is part of a multi-part message. This specifies the index of this part in the whole message. The index starts from 1.  
-6. Return value. This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).  
+
+### Return value.
+This is the length of the PDU and is used in the GSM modem command +CGMS when sending an SMS. **Note** this is not the length of the entire message so can be confusing to one that has not read the documentation. To learm the structure of a PDU read [here](https://bluesecblog.wordpress.com/2016/11/16/sms-submit-tpdu-structure/).  
 A return value of -1 indicates a fatal error. Call *getOverflow* to see if the error was a buffer overflow. If not an overflow it may be an error in the SCA or target phone number.
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
@@ -66,7 +69,10 @@ This returns the address of the buffer created by **encodePDU**. The buffer alre
 ## getOverflow
 <b>bool getOverflow()</b>
 ### After Encode
-Call *getOverflow* after *Encode*. If the result is *true* then there was not enough space in the buffer to create the message. This is fatal and the message cannot be sent.
+Call *getOverflow* after *Encode*. If the result is *true* then there was not enough space in the buffer to create the message. This is fatal and the message cannot be sent.  
+There are two possible reasons for overflow:  
+1. The general work buffer (default size 100 bytes) is too small. Its size can be defined by the <b>PDU</b> constructor.  
+2. The encoded message length is greater than 140 bytes. This can happen even if the general work buffer is large enough. In this case the message must be sent as a multi-part message.
 ### After Decode
 Call *getOverflow* after *Decode*. If *true* there was not enough space in the buffer to fully decode the message. Calling *getText* will show that part which could be decoded.
 # Development and Debugging
@@ -326,10 +332,11 @@ The method to save RAM by putting translation tables into flash has been simplif
 Update Readme to address issues of lowercase output from GSM modems and Network Specific Numbers.  
 No changes to code from 0.5.5
 ## 0.5.7
-Fixed issues #26,#29
+Fix issues 23,28,29,30
 # Open Issues
 ## Network Specific Number
-It has been reported that network specific numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 3:* statement in *PDU::decodeAddress* (pdulib.cpp line 963).
+Issue #26  
+It has been reported that network specific numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 3:* statement in *PDU::decodeAddress* (pdulib.cpp line 983).
 ```
 case 2: // national number
 [[fallthrough]];

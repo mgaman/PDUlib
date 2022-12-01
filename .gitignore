@@ -21,3 +21,4 @@ output/main
 main.map
 DesktopExample/src/bugtest.o
 DesktopExample/src/udh.o
+DesktopExample/src/multipart.o

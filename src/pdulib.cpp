@@ -30,7 +30,7 @@
         Reduce RAM by replacing 2 static buffers by 1 user defined buffer. Default size 100 bytes can be over-ridden
         in the PDU constructor.
         Add the getOverflow method
-  * 0.5.7 Fix issues #26
+  * 0.5.7 Fix issues #27, #28, #30
  */
 
 #ifndef DESKTOP_PDU
@@ -411,15 +411,21 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
 unsigned char PDU::gethex(const char *pc)
 {
   int i;
-  if (isdigit(*pc))
-    i = ((unsigned char)(*pc) - '0') * 16;
+  // bug Issue 27, some modems present HEX characters as lowercase a-f
+  // convert all to uppercase
+  //if (islower(*pc)) {
+  //  char LCC = *pc;
+ // }
+  char PC = toupper(*pc);
+  if (isdigit(PC))
+    i = ((unsigned char)(PC) - '0') * 16;
   else
-    i = ((unsigned char)(*pc) - 'A' + 10) * 16;
-  pc++;
-  if (isdigit(*pc))
-    i += (unsigned char)(*pc) - '0';
+    i = ((unsigned char)(PC) - 'A' + 10) * 16;
+  PC = toupper(*++pc);
+  if (isdigit(PC))
+    i += (unsigned char)(PC) - '0';
   else
-    i += (unsigned char)(*pc) - 'A' + 10;
+    i += (unsigned char)(PC) - 'A' + 10;
   return i;
 }
 
@@ -553,17 +559,25 @@ int PDU::convert_7bit_to_unicode(unsigned char *gsm7bit, int length, char *unico
   return w;
 }
 
-int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode)
+int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode, char firstchar)
 {
   int r;
   int w;
   int length;
   unsigned char gsm7bit[(numSeptets * 8) / 7];
   // first decompress the 7-bit characters into octets
+
   w = 0;
   int index = 0; // index into the string
-  int ovflow = 0;
-  for (r = 0; r < numSeptets; r++)
+  int ovflow = 0;  
+// if first character not zero it was retrieved from udh field, stick it into the final buffer 
+// Issues #28,30
+  if (firstchar != 0)
+  {
+    gsm7bit[w++] = firstchar;
+  }
+
+  for (r = 0; w < numSeptets; r++)
   {
     index = r * 2;
     if (r % 7 == 0)
@@ -582,7 +596,7 @@ int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode)
     }
   }
 
-  length = convert_7bit_to_unicode(gsm7bit, w - ovflow, unicode);
+  length = convert_7bit_to_unicode(gsm7bit, w /*- ovflow*/, unicode);
 
   return length;
 }
@@ -598,6 +612,7 @@ bool PDU::decodePDU(const char *pdu)
   int outindex = 0;
   int i, dcs, /*pid,*/ tpdu;
   bool udhPresent;
+  char udhfollower = 0;
 
   unsigned char X;
   overFlow = false;
@@ -669,8 +684,12 @@ bool PDU::decodePDU(const char *pdu)
         if ((dcs & DCS_ALPHABET_MASK) == DCS_7BIT_ALPHABET_MASK)
         {
           dulength -= 8; // dulength is in septets, udh rounded to 7 octets i.e. 8 septets
-          if (udhlength == 5)
+          if (udhlength == 5) {
+            // retrieve first char from byte following UDH
+            // bug fix Issues 28 & 30
+            udhfollower = gethex(&pdu[index]) >> 1;
             index += 2; // skip to next 7 octet (14 nibble) boundary
+          }
         }
         else
           dulength -= (udhlength + 1); // dulength is in octets
@@ -688,7 +707,7 @@ bool PDU::decodePDU(const char *pdu)
   {
   case DCS_7BIT_ALPHABET_MASK:
     outindex = 0;
-    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff);
+    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff,udhfollower);
     generalWorkBuff[i] = 0;
   //  utf8length = i;
     rc = true;
@@ -961,13 +980,13 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
       [[fallthrough]];
     case 2: // national number
       [[fallthrough]];
-    //case 3: // network specific number
+    //case 3: // network specific number, Issue #26
       BCDtoString(output, pdu, addressLength);
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do this before calling BCDtoString
       break;
     case 5: // alphabetic, convert  nibble length to septets
-      pduGsm7_to_unicode(pdu, (addressLength * 4) / 7, output);
+      pduGsm7_to_unicode(pdu, (addressLength * 4) / 7, output,0);
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do NOT this before calling pduGsm7_to_unicode
       break;
