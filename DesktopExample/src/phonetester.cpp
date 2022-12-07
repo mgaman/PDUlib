@@ -34,7 +34,7 @@ void consoleHandler(int sp);
 // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
 // must have been initialized with a call to tcgetattr() overwise behaviour
 // is undefined
-PDU mypdu = PDU(200);
+PDU mypdu = PDU(350);
 
 // prototypes
 void greekDecode(PDU);
@@ -44,7 +44,11 @@ void UdhDecode(PDU);
 void bufOvflow(PDU);
 void lowercasePDU(PDU);
 void multipartCharNotLost(PDU);
-
+void EncodeErrorsPart1(PDU);
+void EncodeErrorsPart2(PDU);
+void EncodeErrorsPart3(PDU);
+void alphanumericOA(PDU);
+void gsm7string7(PDU);
 // Check for errors
 int main(int argc, char *argv[]) {
     // here is the space to run tests in desktop mode
@@ -55,8 +59,12 @@ int main(int argc, char *argv[]) {
     //bufOvflow(mypdu);
     //lowercasePDU(mypdu);
     //multipartCharNotLost(mypdu);
-
+    //EncodeGSM7errors(mypdu);
+    //EncodeErrorsPart2(mypdu);
+    //alphanumericOA(mypdu);
+    gsm7string7(mypdu);
     ///////////////////////////////////////////////
+
     if (argc != 2) {
         std::cout <<"Usage: pduapp serial_port\n\n";
         return 1;

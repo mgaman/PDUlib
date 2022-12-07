@@ -3,7 +3,7 @@
 #  Run this before submitting to Arduino library
 #  Symbolic links not allowed there
 #
-dirs='examples/Decode examples/Encode examples/Incoming examples/GSM7Check examples/MultiPartSend'
+dirs='examples/Decode examples/Encode examples/Incoming examples/GSM7Check examples/MultiPartSend examples/EncodeErrors'
 current=$PWD
 for d in $dirs
 do

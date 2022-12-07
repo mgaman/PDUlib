@@ -44,3 +44,36 @@ PQRSTUVWXYZÄÖÑÜ§
 pqrstuvwxyzäöñüà
 CR/LF
 
+GSM7 Multipart
+
+Check List
+Encode
+   GSM7 bit
+        Entire alphabet
+            Default Buffer 100
+                standalone
+                mulitpart
+            Buffer big enough
+                standalone
+                multipart
+   16 bit
+        Hebrew
+            Default buffer 100
+                standalone
+                multipart
+            Buffer big enough
+                standalone
+                big enough
+        Emoji
+
+Decode
+    GSM 7 bit
+        Entire alphabet
+            Default buffer
+                standalone
+            Buffer big enough
+                standalone
+                multipart
+    16 bit
+        Hebrew
+        Emoji

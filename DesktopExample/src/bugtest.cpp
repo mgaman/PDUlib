@@ -52,11 +52,53 @@ void multipartCharNotLost(PDU mypdu) {
         std::cout << mypdu.getText() << std::endl;
         if (strlen(firstline) == strlen(mypdu.getText())) {
             if (strcmp(firstline,mypdu.getText()) == 0)
+
                 std::cout << "String compare succeeded\n";
             else
                 std::cout << "String compare failed\n";
         }
+        else if (mypdu.getOverflow())
+            std::cout << "Buffer Overflow\n";
+            else
+                std::cout << "Decode failed\n";
+    }
+}
+
+// Issue #33
+// Alphanumeric OA translate too many characters
+
+const char *pduline = "06910379010023040DD05774983EAFC20100002230603023928046456C318901D960B013C8027D62404FCA13447D3A41CB27A6F904519F59D01519A49EA6A02A146479664114E4E4997582A8482708167BC168A0984C078301";
+void alphanumericOA(PDU mypdu) {
+    if (mypdu.decodePDU(pduline)) {
+        std::cout << mypdu.getSCAnumber() << std::endl;
+        std::cout << mypdu.getSender() << std::endl;
+        std::cout << mypdu.getText() << std::endl;
+    }
+    else {
+        if (mypdu.getOverflow())
+            std::cout << "Buffer overflow, change PDU constructor\n";
         else
             std::cout << "Decode failed\n";
     }
+}
+
+void gsm7string7(PDU mypdu) {
+#if false
+const char *line = "07917952140230F2040C917952541989680000222170519401800741F1985C369F01"; //Abcdefg
+const char *example = "Abcdefg";
+#else
+const char *line = "07917952140230F2040C917952541989680000222170519472800E41F1985C369F63B219AD66BB01"; // ABcdefg1234567
+const char *example = "Abcdefg1234567";
+#endif
+    if (mypdu.decodePDU(line)) {
+        std::cout << mypdu.getText() << std::endl;
+        if (strcmp(mypdu.getText(),example) == 0)
+            std::cout << "Compare succeeded\n";
+        else
+            std::cout << "Compare failed\n";
+    }
+    else if (mypdu.getOverflow())
+        std::cout << "BufferOverflow\n";
+        else
+            std::cout << "Decode error\n";
 }

@@ -1,17 +1,19 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+//#include <HardwareSerial.h>
 #include <pdulib.h>
-#include "credentials.h"
+
 /*******************************
  * 
- * Update credentials.h before running this code
+ * Update credentials before running this code
  * 
  ******************************/
-SoftwareSerial GSM(2,3);  // UNO
-//SoftwareSerial GSM(10,11); // Mega2560
+const char *SCAnumber = "+*******";
+const char *Target = "******"; 
+//SoftwareSerial GSM(2,3);  // UNO
+SoftwareSerial GSM(10,11); // Mega2560
 
-// adjust BUFFER_LENGTH until Encode completes successfulli
-
+// adjust BUFFER_LENGTH until Encode completes successfull, start at 100 and work up
 #define BUFFER_LENGTH 100
 PDU mypdu = PDU(BUFFER_LENGTH);
 char temp[30];
@@ -27,11 +29,10 @@ char temp[30];
 #define RIGHT_SQUARE  93 // GSM escape
 #define EURO 0x20AC  // gsm escape
 
-//#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
-//#define PART0      // GSM7 example too large for UNO so split into 2 parts
+#define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
+#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
-
 const char *final =
 #ifdef PM
     "PM"
@@ -74,10 +75,16 @@ void setup() {
 void loop() {
   if (runOnce) {
     //GSM.println("ATE0");   // turn off echo on modem
+    //GSM.println("+CMGF=0");  // set PDU mode
     runOnce = false;
     mypdu.setSCAnumber(SCAnumber);
 #ifndef DO_ALL_GSM7
-    strcpy(final,"hello");
+#ifdef PM
+    strcpy(final,"PM");
+#else
+    strcpy(final,"No PM");
+#endif
+    strcat(final,"hello");
     mypdu.buildUtf(ZERO,temp);
     strcat(final,temp);
     mypdu.buildUtf(YEN,temp);
@@ -101,10 +108,23 @@ void loop() {
     strcat(final,"שלום");
 #endif
     int len = mypdu.encodePDU(Target,final);
-    if (len == -1)  {
-      Serial.println("Encode Error");
-      if (mypdu.getOverflow())
-        Serial.println("Buffer Overflow");
+    if (len < 0)  {
+      switch (len) {
+          case mypdu.UCS2_TOO_LONG:
+          case mypdu.GSM7_TOO_LONG:
+              Serial.println("Message too long to send as a single message, change to multipart");
+              break;
+          case mypdu.WORK_BUFFER_TOO_SMALL:
+              Serial.println("Work buffer too small, change PDU constructor");
+              break;
+          case mypdu.ADDRESS_FORMAT:
+                Serial.println("SCA or Target address illegal characters or too long");
+              break;
+          case mypdu.MULTIPART_NUMBERS:
+          case mypdu.ALPHABET_8BIT_NOT_SUPPORTED:
+                Serial.println("How did we get here?");
+              break;
+      }
     }
     else {
       sprintf(temp,"AT+CMGS=%d\r",len);

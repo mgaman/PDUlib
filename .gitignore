@@ -22,3 +22,12 @@ main.map
 DesktopExample/src/bugtest.o
 DesktopExample/src/udh.o
 DesktopExample/src/multipart.o
+testing.csv
+testing.ods
+DesktopExample/src/credentials.h
+examples/EncodeErrors/include/README
+examples/EncodeErrors/lib/README
+examples/EncodeErrors/test/README
+DesktopExample/src/encodeErrors.o
+.copycredentials.sh.swp
+examples/EncodeErrors/.gitignore

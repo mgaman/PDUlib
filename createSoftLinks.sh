@@ -1,5 +1,5 @@
 #!/bin/bash
-dirs='examples/Decode examples/Encode examples/Incoming examples/GSM7Check examples/MultiPartSend'
+dirs='examples/Decode examples/Encode examples/Incoming examples/GSM7Check examples/MultiPartSend examples/EncodeErrors'
 if [ $# -gt 0 ]
 then
 	crdirs=false

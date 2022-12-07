@@ -15,7 +15,8 @@
  * 0.5.4 Add getConcatInfo method to support concatenated messages
  * 0.5.5 Place PROGMEM option here (if desired)
  *       Add buffer size option to PDU constructor
- * 0.5.7 Bug fixes Issues 27,28,30
+ * 0.5.7 Bug fixes Issues 27,28,29,30,33
+ *       Enhancement Issue 32
  */
 
 //#define PM   // uncomment to implement Arduino PROGMEM feature
@@ -210,6 +211,11 @@ public:
    * 
    */
   bool getOverflow();
+  /**
+   * @brief Error codes from Encode
+   * 
+   */
+  enum eEncodeError {OBSOLETE_ERROR = -1,UCS2_TOO_LONG = -2, GSM7_TOO_LONG = -3, MULTIPART_NUMBERS = -4,ADDRESS_FORMAT=-5,WORK_BUFFER_TOO_SMALL=-6,ALPHABET_8BIT_NOT_SUPPORTED = -7};
 private:
   bool overFlow;
   int scalength;
@@ -229,7 +235,7 @@ private:
  // char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
   int concatInfo[3];
   unsigned char udhbuffer[8];
-
+  bool phoneNumberLegal(const char *);  // check SCA/recipient number legal format
 
   // helper methods
 

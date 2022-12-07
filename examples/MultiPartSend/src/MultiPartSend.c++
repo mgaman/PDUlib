@@ -1,7 +1,13 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <pdulib.h>
-#include "credentials.h"
+
+/*
+*  Update credentials before running this test
+*
+*/
+const char *SCAnumber = "*********";
+const char *Target = "**********";
 
 bool once = false;
 bool haveSCA = false;

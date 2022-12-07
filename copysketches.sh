@@ -1,5 +1,5 @@
 #!/bin/bash
-dirs='Decode Encode Incoming GSM7Check MultiPartSend'
+dirs='Decode Encode Incoming GSM7Check MultiPartSend EncodeErrors'
 if [ $# -gt 0 ]
 then
 	crdirs=false

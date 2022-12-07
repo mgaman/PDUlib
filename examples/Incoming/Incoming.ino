@@ -2,8 +2,8 @@
 #include <SoftwareSerial.h>
 #include <pdulib.h>
 
-SoftwareSerial GSM(2,3);  // UNO
-//SoftwareSerial GSM(10,11);  // Mega2560
+//SoftwareSerial GSM(2,3);  // UNO
+SoftwareSerial GSM(10,11);  // Mega2560
 
 // Adjust BUFFER_SIZE until the buffer overflow message goes away
 #define BUFFER_SIZE 100
@@ -23,18 +23,24 @@ void setup() {
 #endif
   Serial.print("Buffer Size ");Serial.println(BUFFER_SIZE);
   GSM.begin(9600);
+  delay(500);
+  GSM.println("ATE0");  // echo off
+  delay(500);
+  GSM.println("ST+CMGF=0");  // PDU mode
+  delay(500);
   Serial.println("Send me text messages.. now  ");
 }
 
 void processLine() {
-  //Serial.print(linebuf);
+//  Serial.print(linebuf);   // uncomment if you want to see inciming data from GSM device
   if (nextLinePDU) {
     if (mypdu.decodePDU(linebuf)) {
       if (mypdu.getOverflow())
         Serial.println("Buffer Overflow, partial message only");
       Serial.print("From: "); Serial.println(mypdu.getSender());
       Serial.print("Timestamp: "); Serial.println(mypdu.getTimeStamp());
-      Serial.print("Msg: "); Serial.println(mypdu.getText());
+      Serial.print("Msg: "); Serial.print("Length "); Serial.println(strlen(mypdu.getText()));
+      Serial.println(mypdu.getText());
       // is this standalone or multi-part ?
       int *concat = mypdu.getConcatInfo();
       if (concat[0] == 0)
@@ -49,6 +55,7 @@ void processLine() {
   else if (strncmp("+CMT:",linebuf,5) == 0) {
     nextLinePDU = true;
   }
+  memset(linebuf,0,sizeof(linebuf));
   inCount = 0;  
 }
 void loop() {
