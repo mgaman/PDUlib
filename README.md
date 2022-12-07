@@ -320,6 +320,7 @@ For a 7 bit character, or septet, there is thus space for 1120/7 = 160 character
 Furthermore, in GSM7, there are a number of escaped characters e.g. [ and ]. These take up 2 septets out of the allowed 160.  
 For 16 bits characters (anything not GSM 7) there is space for 1120/8 = 140 octets. Each 16 bit character occupies 2 octets which results in 140/2 or 70 characters.    
 Wait, there's more. Some characters e.g. emojis do not fit in the 16 bit character space so have their own encoding called Surrogate Pairs. These occupy 4 octets each. Bottom line. no more than 35 emojis per message.  
+Remember, 1 or more non-GSM7 characters in a message renders the whole message non-GSM7. 160 Latin characters can be send as a single message. 159 Latin characters + 1 Arabic character makes the whole message non-GSM, so needs to be sent as a multi-part message.  
 Finally, multi-part messages also use up part of the payload for the User Data Header (UDH). For a GSM7 message that will cost you 7 septets, for a non-GSM7 message 4 characters or 2 Surrogate Pairs.  
 # Multi-Part Messages
 ## Sending  
