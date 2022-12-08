@@ -6,20 +6,20 @@
 *  Update credentials before running this test
 *
 */
-const char *SCAnumber = "*********";
-const char *Target = "**********";
+const char *SCAnumber = "*******";
+const char *Target = "*******";
 
 bool once = false;
 bool haveSCA = false;
 
-SoftwareSerial gsm(2,3);
-//SoftwareSerial gsm(10,11);
+//SoftwareSerial gsm(2,3);
+SoftwareSerial gsm(10,11);
 
 // adjust BUFFER_SIZE until buffer overlow message goes away
-#define BUFFER_SIZE 80
+#define BUFFER_SIZE 150
 PDU mypdu = PDU(BUFFER_SIZE);
 
-//#define SEND_MULTI_PART // uncomment to send multipart, comment to send standalone messages
+#define SEND_MULTI_PART // uncomment to send multipart, comment to send standalone messages
 char newMessage[30];
 
 const char *messages[] = {
@@ -52,7 +52,7 @@ bool waitOn(const char *str,unsigned long timeout) {
   const char *pC = str;
   unsigned long done = millis() + timeout;
   while (n && (millis() < done)) {
-    while (gsm.available()) {
+    if (gsm.available()) {
       if ((char)gsm.read() == *pC) { // character match
         pC++;  // move on to next
         n--;
@@ -100,12 +100,25 @@ void loop() {
 #else
     len = mypdu.encodePDU(Target,messages[n]);
 #endif
-    if (len == -1){
-      Serial.print("Encode Message ");
-      Serial.print(n+1);
-      Serial.println(" failed");
-      if (mypdu.getOverflow())
-        Serial.println("Buffer Overflow");
+    if (len < 0) {
+      switch (len) {
+        case mypdu.UCS2_TOO_LONG:
+        case mypdu.GSM7_TOO_LONG:
+          Serial.println("Message too long to send as a single message, change to multipart");
+          break;
+        case mypdu.WORK_BUFFER_TOO_SMALL:
+          Serial.println("Work buffer too small, change PDU constructor");
+          break;
+        case mypdu.ADDRESS_FORMAT:
+          Serial.println("SCA or Target address illegal characters or too long");
+          break;
+        case mypdu.MULTIPART_NUMBERS:
+          Serial.println("Multipart numbers illogical or nit numeric");
+          break;
+        case mypdu.ALPHABET_8BIT_NOT_SUPPORTED:
+          Serial.println("How did we get here?");
+          break;
+      }
     }
     else {
       SendSMS(mypdu.getSMS(),len);
