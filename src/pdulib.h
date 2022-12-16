@@ -244,7 +244,7 @@ private:
   void digitSwap(const char *number, char *pdu);
   
   int utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int UDHsize, int availableSpace);
-  int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii,char firstchar);
+  int pduGsm7_to_unicode(const char *pdu, int pdulength, char *ascii, int fillBits = 0);
 
   int convert_utf8_to_gsm7bit(const char *ascii, char *a7bit, int udhsize, int availableSpace);
   int convert_7bit_to_unicode(unsigned char *a7bit, int length, char *ascii);

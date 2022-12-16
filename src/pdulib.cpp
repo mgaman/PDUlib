@@ -41,6 +41,7 @@
 #endif
 #include <ctype.h>
 #include <pdulib.h>
+#include <stdint.h>
 
 PDU::PDU(int worksize ) {
   generalWorkBuffLength = worksize;
@@ -587,47 +588,36 @@ int PDU::convert_7bit_to_unicode(unsigned char *gsm7bit, int length, char *unico
   return w;
 }
 
-int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode, char firstchar)
+int PDU::pduGsm7_to_unicode(const char *pdu, int numSeptets, char *unicode, int fillBits)
 {
-  int r;
-  int w;
-  int length;
-  unsigned char gsm7bit[(numSeptets * 8) / 7];
-  // first decompress the 7-bit characters into octets
+    unsigned char *buf = new unsigned char[numSeptets+1];
+    uint16_t bits = 0;
+    uint8_t bitsLeft = 0;
 
-  w = 0;
-  int index = 0; // index into the string
-  int ovflow = 0;  
-// if first character not zero it was retrieved from udh field, stick it into the final buffer 
-// Issues #28,30
-  if (firstchar != 0)
-  {
-    gsm7bit[w++] = firstchar;
-  }
+    for (int sept = 0, i = 0; sept < numSeptets; sept++) {
+        if (bitsLeft < 7) {
+            uint8_t c = gethex(&pdu[i]);
+            i += 2;
+            bits |= c << bitsLeft;
+            bitsLeft += 8;
+            if (fillBits) {
+                int erase = (fillBits > 8) ? 8 : fillBits;
+                fillBits -= erase;
+                bits >>= erase;
+                bitsLeft -= erase;
+            }
+        }
+        if (bitsLeft >= 7) {
+            buf[sept] = bits & 0x7F;
+            bits >>= 7;
+            bitsLeft -= 7;
+        }
+    }
+    buf[numSeptets] = 0;
 
-  for (r = 0; w < numSeptets; r++)
-  {
-    index = r * 2;
-    if (r % 7 == 0)
-    {
-      gsm7bit[w++] = (gethex(&pdu[index]) << 0) & 0x7F;
-    }
-    else if (r % 7 == 6)
-    {
-      gsm7bit[w++] = ((gethex(&pdu[index]) << 6) | (gethex(&pdu[index - 2]) >> 2)) & 0x7F;
-      if (w < numSeptets) // Issue 33
-        gsm7bit[w++] = (gethex(&pdu[index]) >> 1) & 0x7F;
-      if (w >= numSeptets)
-        break;
-      ovflow++;
-    }
-    else
-    {
-      gsm7bit[w++] = ((gethex(&pdu[index]) << (r % 7)) | (gethex(&pdu[index - 2]) >> (7 + 1 - (r % 7)))) & 0x7F;
-    }
-  }
-  length = convert_7bit_to_unicode(gsm7bit, w /*- ovflow*/, unicode);
 
+  int length = convert_7bit_to_unicode(buf, numSeptets, unicode);
+  delete[] buf;
   return length;
 }
 
@@ -642,7 +632,6 @@ bool PDU::decodePDU(const char *pdu)
   int outindex = 0;
   int i, dcs, /*pid,*/ tpdu;
   bool udhPresent;
-  char udhfollower = 0;
 
   unsigned char X;
   overFlow = false;
@@ -673,71 +662,84 @@ bool PDU::decodePDU(const char *pdu)
     tsbuff[outindex++] = (X >> 4) + 0x30;
   }
   tsbuff[outindex] = 0;
+
   // decode the actual data
   int dulength = gethex(&pdu[index]);
   index += 2;
   int utflength = 0, utfoffset;
   unsigned short ucs2;
   *generalWorkBuff = 0;
+  int fillBits = 0;
+
+  memset(concatInfo, 0, sizeof(concatInfo));
+
   if (udhPresent)
   {
-    int udhlength = gethex(&pdu[index]);
+    int udhlength = gethex(&pdu[index]); // udh length is always in octets regardless of data coding
     index += 2;
-    switch (udhlength)
-    {
-    default:
-      index += (udhlength + 1);
-      dulength -= udhlength;
-      break; // skip over it
-      // return false;
-    case 5:
-    case 6:
-      int iei = gethex(&pdu[index]);
-      index += 2;
-      int ieilength = gethex(&pdu[index]);
-      index += 2;
-      if ((udhlength == 5 && iei == 0 && ieilength == 3) || (udhlength == 6 && iei == 8 && ieilength == 4))
-      {
-        concatInfo[0] = gethex(&pdu[index]);
-        index += 2; // skip 8 bits of CSMS ref
-        if (udhlength == 6)
-        { // get lo byte of ref number, have already goy hi byte
-          unsigned char lo = gethex(&pdu[index]);
-          concatInfo[0] <<= 8;
-          concatInfo[0] += lo;
-          index += 2;
-        }
-        concatInfo[2] = gethex(&pdu[index]); // get total number of parts
-        index += 2;
-        concatInfo[1] = gethex(&pdu[index]); // get part number
-        index += 2;
-        if ((dcs & DCS_ALPHABET_MASK) == DCS_7BIT_ALPHABET_MASK)
-        {
-          dulength -= 7; // dulength is in septets, last septet is first char of message
-          if (udhlength == 5) {
-            // retrieve first char from byte following UDH
-            // bug fix Issues 28 & 30
-            udhfollower = gethex(&pdu[index]) >> 1;
-            index += 2; // skip to next 7 octet (14 nibble) boundary
-          }
-        }
-        else
-          dulength -= (udhlength + 1); // dulength is in octets
-      }
-      else
-        return false;
-      break;
+    int udhidx = index; //index for header processing
+    index += udhlength * 2; //skip index to SM actual beginning
+
+    //set dubitlen to the SM actual length
+    if ((dcs & DCS_ALPHABET_MASK) == DCS_7BIT_ALPHABET_MASK) {
+        fillBits = 7 - ((udhlength + 1) * 8 % 7); // header is in octets, there are fill bits aligning the SM to a 7th bit
+        int udh7len = (udhlength + 1)*8 / 7 + (fillBits > 0);
+        int smbitlen = (dulength * 7 - udh7len * 7);
+        dulength = smbitlen /7 + (smbitlen %7 > 0); // set to actual SM length
     }
+    else {
+        dulength -= udhlength + 1;
+    }
+
+    //user data header processing -------------
+    while (1) {
+        int iei = gethex(&pdu[udhidx]); // information element identifier
+        udhidx += 2;
+        int iedlength = gethex(&pdu[udhidx]); // information element data length
+        udhidx += 2;
+
+        switch (iei)
+        {
+        case 0: { // concatenated short messages
+            if (iedlength != 3)
+                return false;
+            concatInfo[0] = gethex(&pdu[udhidx]); // get concatenated short message reference number
+            udhidx += 2;
+            concatInfo[2] = gethex(&pdu[udhidx]); // get total number of parts
+            udhidx += 2;
+            concatInfo[1] = gethex(&pdu[udhidx]); // get part number
+            udhidx += 2;
+        } break;
+        case 8: { // NOTE: GSM 03.40 Version 5.3.0 documentation at page 57 lists all possible information element identifiers 
+                  // it doesn't mention this one, this part should probably be deleted
+            if (iedlength != 4)
+                return false;
+            concatInfo[0] = gethex(&pdu[udhidx]);
+            udhidx += 2;
+            concatInfo[0] <<= 8;
+            concatInfo[0] += gethex(&pdu[udhidx]);
+            udhidx += 2;
+            concatInfo[2] = gethex(&pdu[udhidx]); // get total number of parts
+            udhidx += 2;
+            concatInfo[1] = gethex(&pdu[udhidx]); // get part number
+            udhidx += 2;
+        } break;
+        default:
+            udhidx += iedlength;
+            break;
+        }
+        if (udhidx >= index)
+            break;
+    }
+    //end of user data header processing -------------
+    if (udhidx != index)
+        return false;
   }
-  else
-  {
-    memset(concatInfo, 0, sizeof(concatInfo));
-  }
+
   switch (dcs & DCS_ALPHABET_MASK)
   {
   case DCS_7BIT_ALPHABET_MASK:
-    outindex = 0;
-    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff,udhfollower);
+    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff, fillBits);
     generalWorkBuff[i] = 0;
   //  utf8length = i;
     rc = true;
@@ -1016,7 +1018,7 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
         addressLength++;            // we could do this before calling BCDtoString
       break;
     case 5: // alphabetic, convert  nibble length to septets
-      pduGsm7_to_unicode(pdu, (addressLength * 4) / 7, output,0);
+      pduGsm7_to_unicode(pdu, (addressLength * 4) / 7, output);
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do NOT this before calling pduGsm7_to_unicode
       break;
