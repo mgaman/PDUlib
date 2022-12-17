@@ -102,7 +102,7 @@ public:
    * 
    * @return const char* The pointer to the message. It already contained the CTRL/Z delimiter byte.
    */
-  const char *getSMS();
+  const char *getSMS() const;
 
 /**
  * @brief Before encoding a PDU, you must supply the SCA phone number.
@@ -128,28 +128,28 @@ public:
    * 
    * @return char* Pointer to the number
    */
-  const char *getSCAnumber();
+  const char *getSCAnumber() const;
 
   /**
    * @brief Get the senders phone number from a decoded PDU
    * 
    * @return const char* Pointer to the number
    */
-  const char *getSender();
+  const char *getSender() const;
 
   /**
    * @brief Get the Timestamp from a decoded PDU
    * 
    * @return const char* The tomestamp formatted as YYYMMDDHHMMSS
    */
-  const char *getTimeStamp();
+  const char *getTimeStamp() const;
 
   /**
    * @brief Get the text from a decoded PDU.
    * 
    * @return const unsigned char* The message in UTF-8 format.
    */
-  const char *getText();
+  const char *getText() const;
 
   /**
    * @brief Create a UTF16 string from a codepoint > 0xffff
@@ -182,14 +182,14 @@ public:
    * @param pucs A UCS2 array e.g. as created by the utf8_to_ucs2_single method
    * @return true or false
    */
-  bool isGSM7(unsigned short *pucs);  // UCS may be a surrogate pair
+  bool isGSM7(unsigned short *pucs) const;  // UCS may be a surrogate pair
 
   /**
    * @brief Examine a UTF8 encoded Unicode character
    * 
    * @return The number of bytes (octets) occupied by the character
    */
-  int utf8Length(const char *);
+  int utf8Length(const char *) const;
 
   /**
    * @brief Encode a single UTF8 encoded Unicode character into UCS2 format. 
@@ -204,13 +204,13 @@ public:
    * @return Pointer to an array of 3 int. 1st int, CMCS number, 2nd byte part number, 3rd number of parts, zero means this is not a concatenated message
    *  
    */
-  int * getConcatInfo();
+  const int * getConcatInfo() const;
   /**
    * @brief Return an indicator if the incoming SMS was fully decoded or not
    * @return True if the incoming message overflowed the work buffer, False if not
    * 
    */
-  bool getOverflow();
+  bool getOverflow() const;
   /**
    * @brief Error codes from Encode
    * 
@@ -235,7 +235,7 @@ private:
  // char smsSubmit[PDU_BINARY_MAX_LENGTH*2];  // big enough for largest message
   int concatInfo[3];
   unsigned char udhbuffer[8];
-  bool phoneNumberLegal(const char *);  // check SCA/recipient number legal format
+  bool phoneNumberLegal(const char *) const;  // check SCA/recipient number legal format
 
   // helper methods
 

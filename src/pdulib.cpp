@@ -62,7 +62,7 @@ const
 /*
    Sanity check on phone number, only numeric or +
 */
-bool PDU::phoneNumberLegal(const char *number) {
+bool PDU::phoneNumberLegal(const char *number) const {
   bool rc = true;
   int j = strlen(number);
   int i =0;
@@ -868,7 +868,7 @@ int PDU::ucs2_to_utf8(unsigned short ucs2, char *outbuf)
 /*
    return number of bytes used by this UTF8 unicode character
 */
-int PDU::utf8Length(const char *utf8)
+int PDU::utf8Length(const char *utf8) const
 {
   int length = 1;
   unsigned char mask = BITS76ON;
@@ -958,15 +958,15 @@ int PDU::utf8_to_ucs2_single(const char *utf8, unsigned short *target)
   return numbytes;
 }
 
-const char *PDU::getSender()
+const char *PDU::getSender() const
 {
   return addressBuff;
 }
-const char *PDU::getTimeStamp()
+const char *PDU::getTimeStamp() const
 {
   return tsbuff;
 }
-const char *PDU::getText()
+const char *PDU::getText() const
 {
   return generalWorkBuff;
 }
@@ -1058,7 +1058,7 @@ int PDU::utf8_to_ucs2(const char *utf8, char *ucs2)
   return octets;
 }
 
-const char *PDU::getSMS()
+const char *PDU::getSMS() const
 {
   return generalWorkBuff;
 }
@@ -1068,7 +1068,7 @@ void PDU::setSCAnumber(const char *n)
   strcpy(scabuffout, n);
 }
 
-const char *PDU::getSCAnumber()
+const char *PDU::getSCAnumber() const
 {
   return scabuffin; // from INCOMING SMS
 }
@@ -1143,7 +1143,7 @@ int PDU::buildUtf(unsigned long cp, char *target)
   return strlen(target);
 }
 
-bool PDU::isGSM7(unsigned short *pucs)
+bool PDU::isGSM7(unsigned short *pucs) const
 {
   for (unsigned int i = 0; i < sizeof(gsm7_legal) / sizeof(sRange); i++)
   {
@@ -1157,12 +1157,12 @@ bool PDU::isGSM7(unsigned short *pucs)
   return false;
 }
 
-int *PDU::getConcatInfo()
+const int *PDU::getConcatInfo() const
 {
   return concatInfo;
 }
 
-bool PDU::getOverflow() {
+bool PDU::getOverflow() const {
   return overFlow;
 }
 /****************************************************************************
