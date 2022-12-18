@@ -44,10 +44,10 @@
 #include <stdint.h>
 
 PDU::PDU(int worksize ) {
-  generalWorkBuffLength = worksize;
-  generalWorkBuff = new char[generalWorkBuffLength+2]; // dynamically allocate buffer
+  generalWorkBuff.allocate(worksize+2); // dynamically allocate buffer
 }
-PDU::~PDU() {}
+PDU::~PDU() {
+}
 
 // array must be defined before its use in sizeof statement
 const
@@ -420,7 +420,7 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
   // now convert from binary to printable
 //  memcpy(tempbuf, generalWorkBuff, length);
   // each byte in tempbuf converts to 2 bytes in generalworkbuff
-  if (generalWorkBuffLength < (length*2)) {
+  if (generalWorkBuff.size() < (length*2)) {
     overFlow = true;
     return WORK_BUFFER_TOO_SMALL;
   }
@@ -506,7 +506,7 @@ int PDU::convert_7bit_to_unicode(unsigned char *gsm7bit, int length, char *unico
   for (r = 0; r < length; r++)
   {
     // check for buffer overflow
-    if (w >= generalWorkBuffLength) {
+    if (w >= generalWorkBuff.size()) {
       overFlow = true;
       unicode[w] = 0;  // add end marker
       return w;
@@ -739,7 +739,7 @@ bool PDU::decodePDU(const char *pdu)
   switch (dcs & DCS_ALPHABET_MASK)
   {
   case DCS_7BIT_ALPHABET_MASK:
-    i = pduGsm7_to_unicode(&pdu[index], dulength, (char *)generalWorkBuff, fillBits);
+    i = pduGsm7_to_unicode(&pdu[index], dulength, generalWorkBuff.get(), fillBits);
     generalWorkBuff[i] = 0;
   //  utf8length = i;
     rc = true;
@@ -757,7 +757,7 @@ bool PDU::decodePDU(const char *pdu)
       dulength -= 2;
       utflength = ucs2_to_utf8(ucs2, generalWorkBuff + utfoffset);
       // check for overflow
-      if ((utfoffset + utflength) >= generalWorkBuffLength) {
+      if ((utfoffset + utflength) >= generalWorkBuff.size()) {
         overFlow = true;
         break;
       }
@@ -968,7 +968,7 @@ const char *PDU::getTimeStamp() const
 }
 const char *PDU::getText() const
 {
-  return generalWorkBuff;
+  return generalWorkBuff.get();
 }
 
 void PDU::BCDtoString(char *output, const char *input, int length)
@@ -1060,7 +1060,7 @@ int PDU::utf8_to_ucs2(const char *utf8, char *ucs2)
 
 const char *PDU::getSMS() const
 {
-  return generalWorkBuff;
+  return generalWorkBuff.get();
 }
 
 void PDU::setSCAnumber(const char *n)

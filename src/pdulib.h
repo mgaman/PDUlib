@@ -217,6 +217,36 @@ public:
    */
   enum eEncodeError {OBSOLETE_ERROR = -1,UCS2_TOO_LONG = -2, GSM7_TOO_LONG = -3, MULTIPART_NUMBERS = -4,ADDRESS_FORMAT=-5,WORK_BUFFER_TOO_SMALL=-6,ALPHABET_8BIT_NOT_SUPPORTED = -7};
 private:
+    //buffer container class, provides deep copy fuctionality, 
+    //prevents memory leak for PDU copy constructor and assign operator
+    class SmartBuf {
+    public:
+        SmartBuf() : _size(0), _buf(nullptr) {}
+        ~SmartBuf() { delete[] _buf; }
+        SmartBuf(const SmartBuf& buf) : _size(0), _buf(nullptr) {
+            allocate(buf._size);
+            memcpy(_buf, buf._buf, _size);
+        }
+        void operator=(const SmartBuf& buf) {
+            allocate(buf._size);
+            memcpy(_buf, buf._buf, _size);
+        };
+        char* allocate(int size) {
+            delete[] _buf;
+            _size = size;
+            return _buf = new char[size];
+        }
+        char& operator[](size_t idx) const { return _buf[idx]; }
+        char& operator*() const { return _buf[0]; }
+        char* operator+(size_t offset) const { return &_buf[offset]; }
+        char* get() const { return _buf; }
+        size_t size() const { return _size; }
+    private:
+        char* _buf;
+        size_t _size;
+    };
+
+
   bool overFlow;
   int scalength;
   char scabuffin[MAX_NUMBER_LENGTH]; // for incominging SCA
@@ -224,8 +254,7 @@ private:
   int addressLength;  // in octets
   char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
 //  int utf8length;
-  int generalWorkBuffLength;  // static size of encode/decode work area
-  char *generalWorkBuff;  // allocate dynamically
+  SmartBuf generalWorkBuff;  // allocate dynamically
   int tslength;
   char tsbuff[20];    // big enough for timestamp
  // char scanumber[MAX_NUMBER_LENGTH];  // for outgoing SMS
