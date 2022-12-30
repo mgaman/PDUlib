@@ -1011,7 +1011,7 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
       *output++ = '+'; // add prefix and fall through
       [[fallthrough]];
     case 2: // national number
-      [[fallthrough]];
+    //  [[fallthrough]];
     //case 3: // network specific number, Issue #26
       BCDtoString(output, pdu, addressLength);
       if ((addressLength & 1) == 1) // if odd, bump 1
