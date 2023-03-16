@@ -505,8 +505,8 @@ int PDU::convert_7bit_to_unicode(unsigned char *gsm7bit, int length, char *unico
   w = 0;
   for (r = 0; r < length; r++)
   {
-    // check for buffer overflow
-    if (w >= generalWorkBuff.size()) {
+    // check for buffer overflow, check space for additional 4 chars buildUtf may write
+    if (w+4 >= generalWorkBuff.size()) {
       overFlow = true;
       unicode[w] = 0;  // add end marker
       return w;
@@ -682,10 +682,9 @@ bool PDU::decodePDU(const char *pdu)
 
     //set dubitlen to the SM actual length
     if ((dcs & DCS_ALPHABET_MASK) == DCS_7BIT_ALPHABET_MASK) {
-        fillBits = 7 - ((udhlength + 1) * 8 % 7); // header is in octets, there are fill bits aligning the SM to a 7th bit
-        int udh7len = (udhlength + 1)*8 / 7 + (fillBits > 0);
-        int smbitlen = (dulength * 7 - udh7len * 7);
-        dulength = smbitlen /7 + (smbitlen %7 > 0); // set to actual SM length
+        fillBits = (7 - ((udhlength + 1) * 8 % 7)) % 7; // header is in octets, there are fill bits aligning the SM to a 7th bit
+        int udh7len = (udhlength + 1)*8 / 7 + (fillBits > 0); //lentgh in 7bit characters occupied by user data header
+        dulength -= udh7len; // set to actual SM length
     }
     else {
         dulength -= udhlength + 1;
@@ -756,8 +755,8 @@ bool PDU::decodePDU(const char *pdu)
       index += 4;
       dulength -= 2;
       utflength = ucs2_to_utf8(ucs2, generalWorkBuff + utfoffset);
-      // check for overflow
-      if ((utfoffset + utflength) >= generalWorkBuff.size()) {
+      // check for overflow, ucs2_to_utf8 tries to write up to 4 chars check space for +3
+      if (utfoffset + utflength + 3 >= generalWorkBuff.size()) {
         overFlow = true;
         break;
       }
