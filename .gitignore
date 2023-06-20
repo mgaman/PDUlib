@@ -31,3 +31,4 @@ examples/EncodeErrors/test/README
 DesktopExample/src/encodeErrors.o
 .copycredentials.sh.swp
 examples/EncodeErrors/.gitignore
+DesktopExample/src/Utilities.o

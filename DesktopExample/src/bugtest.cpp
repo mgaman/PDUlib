@@ -4,6 +4,8 @@
 #include <iostream>
 #include <pdulib.h>
 #include <cstring>
+//#include "credentials.h"
+#include "Utilities.h"
 
 char *pduIn = "07917952140230F2040C91795254198968000022705022327121808080604028180E880468C1003D1C90886442A9582E988C06C4E9783EA09068442A994EA8946AC56AB95EB0986C46ABD96EB89C6EC7EBF97EC0A070482C1A8FC8A472C96C3A9FD0A8744AAD5AAFD8AC76CBED7ABFE0B0784C2E9BCFE8B47ACD6EBBDFF0B87C4EAFDBEFF8BC7ECFEFFBFF";
 //char *pduIn = "06918919015000400C918919821020300008227070116181818C050003510201005500700064006100740065004000440065007600690063006500490064003D00320036003200370032004000440065007600690063006500550072006C003D0068007400740070003A002F002F00390034002E003100380032002E003100350034002E00320038002F006B00650079007000610064002F0068006F006D0065004000440065";
@@ -102,3 +104,54 @@ const char *example = "Abcdefg1234567";
         else
             std::cout << "Decode error\n";
 }
+
+// issue #38
+void issue38(PDU mypdu) {
+    const char *pdu = "02919311000181F000000B3EC7690B0683C1603250D04D7FBBD36F90343D1E97D9EC34A8EA02F15A31182C3693C560329B6C46F3815A20282C060ACACBE11808454C01";
+    if (mypdu.decodePDU(pdu)) {
+        std::cout << mypdu.getSCAnumber() << std::endl;
+        std::cout << mypdu.getSender() << std::endl;
+        std::cout << mypdu.getTimeStamp() << std::endl;
+        std::cout << mypdu.getText() << std::endl;
+    }
+    else {
+
+    }
+}
+
+void issue39(PDU mypdu) {
+    const char *pdu = "0791246020099990640681991976000832602111455580840500033107010044006F0073006C006500630068006C00690020006A0073006D0065002000730065002C"
+                      "0020007A006500200064006E006500730020006D00610074006500200063006F0020006F0073006C00610076006F007600610074002100200041002000700072006F"
+                      "0074006F007A006500200064006100720065006B00200070";
+    if (mypdu.decodePDU(pdu)) {
+        int *cinfo = mypdu.getConcatInfo();
+        if (cinfo[1] == 0)
+            std::cout << "This is a standalone message\n";
+        else {
+            std::cout << "Part " << cinfo[1] << " of " << cinfo[2] << std::endl;
+        }
+        std::cout << mypdu.getSCAnumber() << std::endl;
+        std::cout << mypdu.getSender() << std::endl;
+        std::cout << mypdu.getTimeStamp() << std::endl;
+        std::cout << mypdu.getText() << std::endl;
+    }
+    else if (mypdu.getOverflow())
+            std::cout << "BufferOverflow\n";
+        else
+            std::cout << "Decode error\n";
+}
+#if 0
+void issue36(PDU mypdu) {
+    const char *lines[] = {
+        "multipart first line XX\n",
+        "multipart second line YY\n",
+    };
+    //int cmss=260;    // Issue 36  >= 255
+    int cmss=99;    // Issue 36  < 255
+    int numparts = sizeof(lines)/sizeof(const char *);
+    for (int j=0; j<numparts; j++)  {
+        sendSMS(mypdu,Target,lines[j],cmss,numparts,j+1);  // send as multipart
+    }  
+}
+#endif
+

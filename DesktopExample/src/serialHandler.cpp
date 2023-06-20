@@ -3,7 +3,7 @@
 #include <queue>
 // C library headers
 //#include <stdio.h>
-//#include <string.h>
+#include <string.h>
 
 // Linux headers
 //#include <fcntl.h> // Contains file controls like O_RDWR
@@ -41,6 +41,9 @@ void serialHandler(int sp) {
                     linebuf[lineoffset] = 0;    // END MARKER
                     inputQueue.push(std::string(linebuf));
                     lineoffset = 0;
+                }
+                if (strncmp(linebuf,"+CMGS:",6) == 0) { 
+                    GtQueue.push(2);
                 }
             }       
         }

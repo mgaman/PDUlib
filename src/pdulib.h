@@ -53,7 +53,7 @@
 
 // type of address
 #define INTERNATIONAL_NUMBER 0x91
-#define NATIONAL_NUMBER 0xA1
+#define NATIONAL_NUMBER 0xA1   // outgoing only , incoming has 0x81
 
 #define EXT_MASK 0x80   // bit 7
 #define TON_MASK 0x70   // bits 4-6

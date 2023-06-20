@@ -279,6 +279,10 @@ int PDU::utf8_to_packed7bit(const char *utf8, char *pdu, int *septets, int udhsi
 int PDU::buildUDH(unsigned short csms, unsigned numparts, unsigned partnumber)
 {
   int offset = 0;
+  // Issue 36  extra padding byte prepended to all messages
+  // caused by following check that tries to be clever and save a byte
+  // temporary fix, cancel the check
+#if 0
   if (csms <= 255)
   {
     udhbuffer[offset++] = 5; // length
@@ -288,12 +292,15 @@ int PDU::buildUDH(unsigned short csms, unsigned numparts, unsigned partnumber)
   }
   else
   {
+#endif
     udhbuffer[offset++] = 6;           // length
     udhbuffer[offset++] = 8;           // IEI
     udhbuffer[offset++] = 4;           // len IEL
     udhbuffer[offset++] = csms >> 8;   // hi byte
     udhbuffer[offset++] = csms & 0xff; // lo byte
+#if 0
   }
+#endif
   udhbuffer[offset++] = numparts;
   udhbuffer[offset++] = partnumber;
   return offset;
@@ -371,11 +378,13 @@ int PDU::encodePDU(const char *recipient, const char *message, unsigned short cs
     pduLengthPlaceHolder = smsOffset;
     tempbuf[smsOffset++] = 1; // placeholder for length in septets
     // insert UDH if any
-    if (udhsize == 6)
+#if 0
+    if (udhsize == 6)    // Issue 36 This test now redundant 
     { // 1 byte ref number, need to pad UDH to 7 octets
       udhbuffer[6] = 0x40;
       udhsize++;
     }
+#endif
     if (udhsize != 0)
     {
       memcpy(&tempbuf[smsOffset], udhbuffer, udhsize);
@@ -1007,9 +1016,11 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
     {
     case 1:            // international number
       *output++ = '+'; // add prefix and fall through
-      [[fallthrough]];
+     // [[fallthrough]]
+    case 0: // issue #39
+    //  [[fallthrough]]
     case 2: // national number
-      [[fallthrough]];
+    //  [[fallthrough]];
     //case 3: // network specific number, Issue #26
       BCDtoString(output, pdu, addressLength);
       if ((addressLength & 1) == 1) // if odd, bump 1

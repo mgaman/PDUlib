@@ -373,3 +373,5 @@ case 2: // national number
 [[fallthrough]];
 //case 3: // network specific number
 ```
+## 0.5.8
+Fix issues #36 and #39

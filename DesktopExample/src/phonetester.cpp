@@ -28,7 +28,7 @@ struct termios tty;
 void serialHandler(int);
 void unsolicited(int sp);
 void startup(int sp);
-void consoleHandler(int sp);
+void consoleHandler(int sp,PDU);
 
 // Read in existing settings, and handle any error
 // NOTE: This is important! POSIX states that the struct passed to tcsetattr()
@@ -49,9 +49,12 @@ void EncodeErrorsPart2(PDU);
 void EncodeErrorsPart3(PDU);
 void alphanumericOA(PDU);
 void gsm7string7(PDU);
+void issue36(PDU);
+void issue38(PDU);
+void issue39(PDU);
 // Check for errors
 int main(int argc, char *argv[]) {
-    // here is the space to run tests in desktop mode
+    // here is the space to run tests in desktop mode without modem
     //greekDecode(mypdu);
     //gsm7check(mypdu);
     //gsm7encode(mypdu);
@@ -62,7 +65,9 @@ int main(int argc, char *argv[]) {
     //EncodeGSM7errors(mypdu);
     //EncodeErrorsPart2(mypdu);
     //alphanumericOA(mypdu);
-    gsm7string7(mypdu);
+    //gsm7string7(mypdu);
+    //issue38(mypdu);
+    issue39(mypdu);
     ///////////////////////////////////////////////
 
     if (argc != 2) {
@@ -71,6 +76,7 @@ int main(int argc, char *argv[]) {
     }
     std::cout << argv[1] << std::endl; 
     serial_port = open(argv[1], O_RDWR);
+//    serial_port = open("/dev/ttyACM0", O_RDWR);
     if (serial_port < 0) 
         std::cout << "Error " << errno << " from open:" << strerror(errno) << std::endl;
     else {
@@ -97,13 +103,15 @@ int main(int argc, char *argv[]) {
             if (tcsetattr(serial_port, TCSANOW, &tty) != 0) 
                 std::cout << "Error" << errno << " from tcsetattr: " << strerror(errno) << std::endl;
             else {
-               std::cout << "Attributes all set\n";
-               std::thread t1(serialHandler,serial_port);
-               std::thread t2(startup,serial_port);
-               t2.join();  // wait until startup finished
-               std::thread t3(unsolicited,serial_port);
-               std::thread t4(consoleHandler,serial_port);
-               while (true) {}
+                std::cout << "Attributes all set\n";
+                std::thread t1(serialHandler,serial_port);
+                std::thread t2(startup,serial_port);
+                t2.join();  // wait until startup finished
+                // examples that need modem go here
+                issue36(mypdu);
+                std::thread t3(unsolicited,serial_port);
+                std::thread t4(consoleHandler,serial_port,mypdu);
+                while (true) {}
             }
         }
         close(serial_port);

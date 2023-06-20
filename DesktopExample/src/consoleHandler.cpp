@@ -1,14 +1,11 @@
 #include <iostream>
 #include <string>
-#include <chrono>
 #include <string.h>
-#include <unistd.h> // write(), read(), close()
-#include <queue>
 
 #include "pdulib.h"
-#include "credentials.h"
-
-extern std::queue<int8_t> GtQueue;
+//#include "credentials.h"
+#include "Utilities.h"
+static const char *Target = "0545919886";
 
 const char *message[] = {
   "0123456789ABCDEFGHIJ0123456789ABCDEFGHIJ0123456789ABCDEFGHIJאבגד",  // 0 GSM 16 bit
@@ -29,103 +26,36 @@ const char *message[] = {
   "אָאַאְאּאֵ"  // 8 nikkud  each char is surrogate pair i.e. 4 bytes
 };
 
-struct sCM {
-  int llist ;
-  const char *mlist[] ;
-};
-sCM concatMessage1 = { 6,{
+const char *concatMessage[] = { 
   "ABCDEFGHIJKLMNOPQRSTUVW\r\n", // gsm 7
   "0123456789\r\n",  // gsm 7
   "Third line\r\n",  // gsm 7
   "Fourth Line\r\n",  // gsm 7
   "אבגדהוז",  // 16 bit
   "😃"      // surrogate pair
-  }};
+};
 
-std::string menu = "Menu\n" "  [01234567] send sms\n   c send multipart sms";
-void sendSMS(int sp,int i);
-void sendConcat(int sp, sCM *);
+std::string menu = "Menu\n" "  [012345678] send sms\n   c send multipart sms\n\n";
+int cms = 10;
 
-void consoleHandler(int sp) {
-    char linein[10];
-    std::cout << "Console handler starting\n";
-    while (true) {
-        std::cin.getline(linein,sizeof(linein));
-        switch (linein[0]) {
-            case '0' ... '8':
-              sendSMS(sp,linein[0]-'0');
-              break;
-            case 'c':
-              sendConcat(sp,&concatMessage1);
-              break;
-            default:
-                std::cout << menu;
-        }
-    }
-}
-
-extern PDU mypdu;
-
-char writeBuf[50];   // general purpose
-
-void waiton(int n) {
-  std::cout << "wait " << n << std::endl;
+void consoleHandler(int sp,PDU mypdu) {
+  char linein[10];
+  int numMessages = sizeof(concatMessage)/sizeof(const char *);
+  std::cout << "Console handler starting\n";
   while (true) {
-    if (!GtQueue.empty()) {
-      int response = GtQueue.front();
-      GtQueue.pop();
-      if (response == n)
-        return;
-    }
-  }  
-}
-/*
-    Send a single message from a list
-*/
-void sendSMS(int sp, int i) {
-  // mypdu.setSCAnumber(SCAnumber);  // already set in unsolicited.cpp
-  int len = mypdu.encodePDU(Target,message[i]);
-  if (len == -1) {
-    std::cout << "Encode failed\n";
-    if (mypdu.getOverflow())
-      std::cout << "Encode buffer overflow\n";
-  }
-  else {
-    sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
-    write(sp,writeBuf,strlen(writeBuf));
-    // should wait for ">" but just do a delay instead
-    waiton(1);
-    //sleep(5);
-    write(sp,mypdu.getSMS(),strlen(mypdu.getSMS()));
-    // wait for +CGMS
-    waiton(2);
-    //sleep(5);
-  }
-} 
-/*
-  Send a multi-part message
-*/
-int refnum = 30;
-void sendConcat(int sp,sCM *pMess){
-  refnum++;
-  for (int i=0; i<pMess->llist;i++) {
-    //mypdu.setSCAnumber(SCAnumber);   // already set in unsolicited.cpp
-    //std::cout << pMess->mlist[i] << " " << pMess->llist << " " << i+1 << std::endl;
-    int len = mypdu.encodePDU(Target,pMess->mlist[i],refnum,pMess->llist,i+1);
-    if (len == -1) {
-      std::cout << "Encode failed\n";
-      if (mypdu.getOverflow()) {
-        std::cout << "Buffer overflow\n";
-      }
-    }
-    else {
-      sprintf(writeBuf,"AT+CMGS=%d\r\n",len);
-      write(sp,writeBuf,strlen(writeBuf));
-      // should wait for ">" but just do a delay instead
-      //sleep(3);
-      waiton(1);
-      write(sp,mypdu.getSMS(),strlen(mypdu.getSMS()));
-      waiton(2);
+    std::cin.getline(linein,sizeof(linein));
+    switch (linein[0]) {
+      case '0' ... '8':
+        sendSMS(mypdu,Target,message[linein[0]-'0']);
+        break;
+      case 'c':
+        for (int j=0;j<numMessages;j++)
+          sendSMS(mypdu,Target,concatMessage[j],cms,numMessages,j+1);
+        cms++;
+        break;
+      default:
+        std::cout << menu;
+        break;
     }
   }
 }
