@@ -364,6 +364,10 @@ No changes to code from 0.5.5
 Fix issues 23,27,28,30,32,33
 Note that *encodePDU* no longer returns the value *-1* to indicate an error. It now returns a number less than zero to indicate an error. Read [encodePDU](#encodepdu) to understand the values.  
 The example Arduino scripts were updated to reflect the change to *encodePDU*.
+## 0.5.8
+Fix issues #36 and #39
+## 0.5.9
+Fixed  type on README.md
 # Open Issues
 ## Network Specific Number
 Issue #26  
@@ -373,5 +377,3 @@ case 2: // national number
 [[fallthrough]];
 //case 3: // network specific number
 ```
-## 0.5.8
-Fix issues #36 and #39
