@@ -219,10 +219,10 @@ public:
 private:
   bool overFlow;
   int scalength;
-  char scabuffin[MAX_NUMBER_LENGTH]; // for incominging SCA
-  char scabuffout[MAX_NUMBER_LENGTH]; // for outgoing SCA
+  char scabuffin[MAX_NUMBER_LENGTH+1]; // for incominging SCA
+  char scabuffout[MAX_NUMBER_LENGTH+1]; // for outgoing SCA
   int addressLength;  // in octets
-  char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
+  char addressBuff[MAX_NUMBER_LENGTH+1];  // ample for any phone number
 //  int utf8length;
   int generalWorkBuffLength;  // static size of encode/decode work area
   char *generalWorkBuff;  // allocate dynamically
