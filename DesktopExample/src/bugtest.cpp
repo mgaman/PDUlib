@@ -155,3 +155,22 @@ void issue36(PDU mypdu) {
 }
 #endif
 
+void issue44(PDU mypdu) {
+    const char *pdu="0891683108200085F26414A101867376945900547884000852108221105123820500031D0302FF0891CA653E98848B66FF095C0A656C768400310031003100310031003100310031003100310031FF1A60A8670900324E2A8F7B91CF5E947528670D52A156685B9E4F8B000D000A5C064E8E0032003000320035002D00300032002D0031003191CA653E3002598260A889817EE77EED4F7F7528FF0C8BF74E8E91CA";
+    if (mypdu.decodePDU(pdu)) {
+        int *cinfo = mypdu.getConcatInfo();
+        if (cinfo[1] == 0)
+            std::cout << "This is a standalone message\n";
+        else {
+            std::cout << "Part " << cinfo[1] << " of " << cinfo[2] << std::endl;
+        }
+        std::cout << mypdu.getSCAnumber() << std::endl;
+        std::cout << mypdu.getSender() << std::endl;
+        std::cout << mypdu.getTimeStamp() << std::endl;
+        std::cout << mypdu.getText() << std::endl;
+    }
+    else if (mypdu.getOverflow())
+            std::cout << "BufferOverflow\n";
+        else
+            std::cout << "Decode error\n";
+}

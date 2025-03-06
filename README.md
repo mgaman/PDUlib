@@ -69,9 +69,12 @@ A return value of less than zero indicates a fatal error. The possible errors, e
 
 ## setSCAnumber
 <b>void setSCAnumber(const char *)</b>  
-Before one can encode and send a PDU the number of the Service Centre must be known.  
-Typically this can be discovered in a GSM modem by issuing the command  
+Before one can encode and send a PDU the number of the Service Centre must be provided.  
+This action may, or may not, be necessary depending on your network provider. Here in the developers location this action may be omitted but I cannot speak for other locations.  
+Typically the SCA number can be discovered in a GSM modem by issuing the command  
 AT+CSCA?  
+
+The examples provided all include this action. I suggest you comment out the *pdu.setSCAnumber()* statement and see what happens. 
 ## getSMS  
 <b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
@@ -124,7 +127,7 @@ int main(int argc,char *argv[]) {
     // discover and save SCA number  
     write(sp,"AT+CSCA\r",11);  
     --> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
-    mypdu.setSCAnumber("nnnnnn");  
+    mypdu.setSCAnumber("nnnnnn");  // this line may be unnecessary
     // create an SMS buffer  
     //int len = myPDU.encodePDU("+12121234567","שלום");  
     int len = myPDU.encodePDU("+12121234567","hi there");  
@@ -213,7 +216,7 @@ int main() {
   mypdu.buildUtf(YEN,tempbuf);
   strcat(finalMsg,tempbuf);
   // now carry on as normal
-  mypdu.setSCAnumber("+12125557777");
+  mypdu.setSCAnumber("+12125557777");  // this line may be unnecessary
   int len = mypdu.encodePDU("+12125556666",finalMsg);
   if (len < 0) {
     .....
@@ -289,7 +292,7 @@ void setup() {
   delay(500);
   GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
   delay(500);
-  mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here
+  mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here, if unnecessary
   int len = mypdu.encodePDU(nat,message); 
   if (len < 0) {
     switch (len) {
@@ -367,7 +370,10 @@ The example Arduino scripts were updated to reflect the change to *encodePDU*.
 ## 0.5.8
 Fix issues #36 and #39
 ## 0.5.9
-Fixed  type on README.md
+Fixed  typo on README.md
+## 0.5.10
+Fixed issue 44  
+setSCAnumber section modified in the README
 # Open Issues
 ## Network Specific Number
 Issue #26  

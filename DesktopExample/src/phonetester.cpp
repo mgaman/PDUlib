@@ -52,6 +52,7 @@ void gsm7string7(PDU);
 void issue36(PDU);
 void issue38(PDU);
 void issue39(PDU);
+void issue44(PDU);
 // Check for errors
 int main(int argc, char *argv[]) {
     // here is the space to run tests in desktop mode without modem
@@ -67,7 +68,8 @@ int main(int argc, char *argv[]) {
     //alphanumericOA(mypdu);
     //gsm7string7(mypdu);
     //issue38(mypdu);
-    issue39(mypdu);
+    //issue39(mypdu);
+    issue44(mypdu);
     ///////////////////////////////////////////////
 
     if (argc != 2) {

@@ -62,7 +62,7 @@
 
 #define MAX_SMS_LENGTH_7BIT 160 // GSM 3.4
 #define MAX_NUMBER_OCTETS 140
-#define MAX_NUMBER_LENGTH 20    // gets packed into BCD or packed 7 bit
+#define MAX_NUMBER_LENGTH 20    // gets packed into BCD or packed 7 bit see https://en.wikipedia.org/wiki/GSM_03.40 TON
 #define UTF8_BUFFSIZE 100   // tailor to what you need
 
 //SCA (12) + type + mref + address(12) + pid + dcs + length + data(140) -- no valtime
@@ -219,10 +219,10 @@ public:
 private:
   bool overFlow;
   int scalength;
-  char scabuffin[MAX_NUMBER_LENGTH]; // for incominging SCA
-  char scabuffout[MAX_NUMBER_LENGTH]; // for outgoing SCA
+  char scabuffin[MAX_NUMBER_LENGTH+1]; // for incominging SCA issue 44
+  char scabuffout[MAX_NUMBER_LENGTH+1]; // for outgoing SCA
   int addressLength;  // in octets
-  char addressBuff[MAX_NUMBER_LENGTH];  // ample for any phone number
+  char addressBuff[MAX_NUMBER_LENGTH+1];  // ample for any phone number issue44
 //  int utf8length;
   int generalWorkBuffLength;  // static size of encode/decode work area
   char *generalWorkBuff;  // allocate dynamically
