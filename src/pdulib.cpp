@@ -656,7 +656,7 @@ bool PDU::decodePDU(const char *pdu)
   unsigned char X;
   overFlow = false;
   i = decodeAddress(pdu, scabuffin, OCTETS);
-  if (i < 0)
+  if (i < 0)  // issue 47
   {
     return false;
   }
@@ -665,7 +665,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2; // skip over tpdu
   udhPresent = tpdu & (1 << PDU_UDHI);
   i = decodeAddress(&pdu[index], addressBuff, NIBBLES);
-  if (i < 0)
+  if (i < 0)  // issue 47
     return false;
   index += i + 4; // skip over sender number length & atn
   // pid = gethex(&pdu[index]); // TP-PID
@@ -1005,8 +1005,9 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
   if (et == NIBBLES)
     addressLength = length;
   else {
-    addressLength = --length * 2;
+    addressLength = --length * 2; // OCTETS for SCA issue 47
     if (addressLength == 0)
+      *output = 0;  // clear output
       return 0;
   }
   pdu += 2; // gethex reads 2 bytes
