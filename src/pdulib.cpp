@@ -656,7 +656,7 @@ bool PDU::decodePDU(const char *pdu)
   unsigned char X;
   overFlow = false;
   i = decodeAddress(pdu, scabuffin, OCTETS);
-  if (i == 0)
+  if (i < 0)
   {
     return false;
   }
@@ -665,7 +665,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2; // skip over tpdu
   udhPresent = tpdu & (1 << PDU_UDHI);
   i = decodeAddress(&pdu[index], addressBuff, NIBBLES);
-  if (i == 0)
+  if (i < 0)
     return false;
   index += i + 4; // skip over sender number length & atn
   // pid = gethex(&pdu[index]); // TP-PID
@@ -995,7 +995,7 @@ void PDU::BCDtoString(char *output, const char *input, int length)
 
 /*
     returns number of characters to occupied by number part (after length and atn)
-    returns 0 if number cannot be decoded
+    returns -1 if number cannot be decoded   issue47
 */
 int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
 {                           // pdu to readable starts with length octet
@@ -1004,8 +1004,11 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
   // if nibbles length is just the number
   if (et == NIBBLES)
     addressLength = length;
-  else
+  else {
     addressLength = --length * 2;
+    if (addressLength == 0)
+      return 0;
+  }
   pdu += 2; // gethex reads 2 bytes
   // now analyse address type
   int adt = gethex(pdu);
@@ -1032,13 +1035,13 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
         addressLength++;            // we could do NOT this before calling pduGsm7_to_unicode
       break;
     default:
-      addressLength = 0;
+      addressLength = -1; // error 47
       break;
     }
   }
   else
   {
-    addressLength = 0; // dont know how to handle EXT
+    addressLength = 0; // dont know how to handle EXT error 47
   }
   return addressLength;
 }
