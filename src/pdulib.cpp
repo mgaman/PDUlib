@@ -1041,7 +1041,7 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
   }
   else
   {
-    addressLength = 0; // dont know how to handle EXT error 47
+    addressLength = -1; // dont know how to handle EXT error 47
   }
   return addressLength;
 }
