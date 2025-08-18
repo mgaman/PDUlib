@@ -1006,9 +1006,10 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
     addressLength = length;
   else {
     addressLength = --length * 2; // OCTETS for SCA issue 47
-    if (addressLength == 0)
+    if (addressLength == 0) {
       *output = 0;  // clear output
       return 0;
+    }
   }
   pdu += 2; // gethex reads 2 bytes
   // now analyse address type
@@ -1024,6 +1025,7 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
     case 0: // issue #39
     //  [[fallthrough]]
     case 2: // national number
+    case 6: // issue 41
     //  [[fallthrough]];
     //case 3: // network specific number, Issue #26
       BCDtoString(output, pdu, addressLength);

@@ -52,6 +52,7 @@ void gsm7string7(PDU);
 void issue36(PDU);
 void issue38(PDU);
 void issue39(PDU);
+void issue41(PDU);
 void issue44(PDU);
 void issue47(PDU);
 // Check for errors
@@ -71,6 +72,7 @@ int main(int argc, char *argv[]) {
     //issue38(mypdu);
     //issue39(mypdu);
     //issue44(mypdu);
+    //issue41(mypdu);
     issue47(mypdu);
     ///////////////////////////////////////////////
 
