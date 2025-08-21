@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
-//#include <HardwareSerial.h>
+//#include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 #include <pdulib.h>
 
 /*******************************
@@ -8,13 +8,13 @@
  * Update credentials before running this code
  * 
  ******************************/
-const char *SCAnumber = "+*******";
-const char *Target = "******"; 
+//const char *SCAnumber = "+*******";  // issue 46
+const char *Target = "+********"; 
 //SoftwareSerial GSM(2,3);  // UNO
-SoftwareSerial GSM(10,11); // Mega2560
-
+//SoftwareSerial GSM(10,11); // Mega2560
+#define GSM Serial1   // my 4G modem works on 115200 so cannot use software serial
 // adjust BUFFER_LENGTH until Encode completes successfull, start at 100 and work up
-#define BUFFER_LENGTH 100
+#define BUFFER_LENGTH 500
 PDU mypdu = PDU(BUFFER_LENGTH);
 char temp[30];
 
@@ -30,7 +30,7 @@ char temp[30];
 #define EURO 0x20AC  // gsm escape
 
 #define DO_ALL_GSM7  // Either print 7 bit alphabet characters or 16 bit alphabet characters
-#define PART0      // GSM7 example too large for UNO so split into 2 parts
+//#define PART0      // GSM7 example too large for UNO so split into 2 parts
 
 #ifdef DO_ALL_GSM7
 const char *final =
@@ -63,7 +63,7 @@ bool gotGT = false;
 void setup() {
   Serial.begin(9600);
   while (!Serial){}
-  GSM.begin(9600);
+  GSM.begin(115200);
 #ifdef PM
   Serial.println("Using PM");
 #else
@@ -77,7 +77,8 @@ void loop() {
     //GSM.println("ATE0");   // turn off echo on modem
     //GSM.println("+CMGF=0");  // set PDU mode
     runOnce = false;
-    mypdu.setSCAnumber(SCAnumber);
+    //mypdu.setSCAnumber(SCAnumber);
+    mypdu.setSCAnumber();  // use default SCA
 #ifndef DO_ALL_GSM7
 #ifdef PM
     strcpy(final,"PM");

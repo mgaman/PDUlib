@@ -174,3 +174,33 @@ void issue44(PDU mypdu) {
         else
             std::cout << "Decode error\n";
 }
+
+/**
+ * @brief Send with default SCA
+ * 
+ * @param mypdu 
+ */
+void issue46(PDU mypdu) {
+    const char *msg = "Hi There again אבג";
+    //defaultSCA(mypdu);
+    mypdu.setSCAnumber();
+    sendSMS(mypdu,"0545919886",msg);  // send as single
+}
+
+/**
+ * @brief Zero length SCA
+ * 
+ */
+void issue47(PDU mypdu) {
+    const char *pdu = "01002414a0018666167000009318280008528041713134234830106df157335e025b894fe153ef79d1628067099650516c53f830119a8c8bc17801003600300033003100340038ff0c82e5975e672c4eba64cd4f5cff0c8bf752ff6cc497323002";
+    if (mypdu.decodePDU(pdu)) {
+        printf("Issue47 Decode succeeded\n");
+        std::cout << "SCA: " << mypdu.getSCAnumber() << std::endl;
+        std::cout << mypdu.getSender() << std::endl;
+        std::cout << mypdu.getTimeStamp() << std::endl;
+        std::cout << mypdu.getText() << std::endl;
+    }
+    else {
+        printf("Decode failed\n");
+    }
+}

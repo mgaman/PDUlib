@@ -9,12 +9,13 @@
  * 
  ******************************/
 const char *SCAnumber = "+*******";
-const char *Target = "******"; 
+const char *Target = "+********"; 
 //SoftwareSerial GSM(2,3);  // UNO
-SoftwareSerial GSM(10,11); // Mega2560
+//SoftwareSerial GSM(10,11); // Mega2560
+#define GSM Serial1  // my 4G modem works at 115200, must use HW serial
 
 // adjust BUFFER_LENGTH until Encode completes successfull, start at 100 and work up
-#define BUFFER_LENGTH 100
+#define BUFFER_LENGTH 500
 PDU mypdu = PDU(BUFFER_LENGTH);
 char temp[30];
 
@@ -63,7 +64,7 @@ bool gotGT = false;
 void setup() {
   Serial.begin(9600);
   while (!Serial){}
-  GSM.begin(9600);
+  GSM.begin(115200);
 #ifdef PM
   Serial.println("Using PM");
 #else
@@ -77,7 +78,8 @@ void loop() {
     //GSM.println("ATE0");   // turn off echo on modem
     //GSM.println("+CMGF=0");  // set PDU mode
     runOnce = false;
-    mypdu.setSCAnumber(SCAnumber);
+    //mypdu.setSCAnumber(SCAnumber);  // default SCA
+    mypdu.setSCAnumber();  // default SCA
 #ifndef DO_ALL_GSM7
 #ifdef PM
     strcpy(final,"PM");

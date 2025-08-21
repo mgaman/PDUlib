@@ -113,6 +113,13 @@ public:
  */
   void setSCAnumber(const char *number);
 
+/**
+ * @brief Instruct the carrier to use the default SCA number
+ * 
+ * @param None
+ * 
+ */
+  void setSCAnumber();
   /**
    * @brief Decode a PDU, typically received from a GSM modem when in PDU mode.
    * After a successful decoding you can retrieve the components parts, described below.

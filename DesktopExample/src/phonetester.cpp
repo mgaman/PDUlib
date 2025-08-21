@@ -53,6 +53,8 @@ void issue36(PDU);
 void issue38(PDU);
 void issue39(PDU);
 void issue44(PDU);
+void issue46(PDU);
+void issue47(PDU);
 // Check for errors
 int main(int argc, char *argv[]) {
     // here is the space to run tests in desktop mode without modem
@@ -69,7 +71,8 @@ int main(int argc, char *argv[]) {
     //gsm7string7(mypdu);
     //issue38(mypdu);
     //issue39(mypdu);
-    issue44(mypdu);
+    //issue44(mypdu);
+    issue47(mypdu);
     ///////////////////////////////////////////////
 
     if (argc != 2) {
@@ -99,8 +102,9 @@ int main(int argc, char *argv[]) {
             tty.c_iflag &= ~ICRNL;  // do not translate cr to lf
             tty.c_iflag &= ~IGNCR;  // do not ignore cr
             // Set in/out baud rate to be 9600
-            cfsetispeed(&tty, B9600);
-            cfsetospeed(&tty, B9600);
+            
+            cfsetispeed(&tty, B115200);
+            cfsetospeed(&tty, B115200);
             // Save tty settings, also checking for error
             if (tcsetattr(serial_port, TCSANOW, &tty) != 0) 
                 std::cout << "Error" << errno << " from tcsetattr: " << strerror(errno) << std::endl;
@@ -110,7 +114,8 @@ int main(int argc, char *argv[]) {
                 std::thread t2(startup,serial_port);
                 t2.join();  // wait until startup finished
                 // examples that need modem go here
-                issue36(mypdu);
+                //issue36(mypdu);
+                //issue46(mypdu);
                 std::thread t3(unsolicited,serial_port);
                 std::thread t4(consoleHandler,serial_port,mypdu);
                 while (true) {}

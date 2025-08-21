@@ -68,13 +68,16 @@ A return value of less than zero indicates a fatal error. The possible errors, e
 </table>
 
 ## setSCAnumber
+<b>void setSCAnumber()</b>  
 <b>void setSCAnumber(const char *)</b>  
-Before one can encode and send a PDU the number of the Service Centre must be provided.  
+<!--Before one can encode and send a PDU the number of the Service Centre must be provided.  
 This action may, or may not, be necessary depending on your network provider. Here in the developers location this action may be omitted but I cannot speak for other locations.  
 Typically the SCA number can be discovered in a GSM modem by issuing the command  
 AT+CSCA?  
 
-The examples provided all include this action. I suggest you comment out the *pdu.setSCAnumber()* statement and see what happens. 
+The examples provided all include this action. I suggest you comment out the *pdu.setSCAnumber()* statement and see what happens. -->
+Calling this function without a parameter instructs the carrier to use its default SCA number. This action may be dependent on your local network carrier.  
+If you do need to supply a number then the GSM modem command <b>AT+CSCA?</b> will provide it.
 ## getSMS  
 <b>const char *getSMS()</b>  
 This returns the address of the buffer created by **encodePDU**. The buffer already contains the termination character CTRL/Z so can be used as is.  
@@ -125,9 +128,10 @@ int main(int argc,char *argv[]) {
     // ensure that the modem is in PDU mode
     write(sp,"AT+CMGF=0\r",10); 
     // discover and save SCA number  
-    write(sp,"AT+CSCA\r",11);  
+    //write(sp,"AT+CSCA\r",11);  
     --> responds +CSCA: "nnnnnn",129  where nnnnnn is a phone number , extract the field 
-    mypdu.setSCAnumber("nnnnnn");  // this line may be unnecessary
+    //mypdu.setSCAnumber("nnnnnn");  // this line may be unnecessary
+    mypdu.setSCAnumber();   // use default SCA
     // create an SMS buffer  
     //int len = myPDU.encodePDU("+12121234567","שלום");  
     int len = myPDU.encodePDU("+12121234567","hi there");  
@@ -216,7 +220,8 @@ int main() {
   mypdu.buildUtf(YEN,tempbuf);
   strcat(finalMsg,tempbuf);
   // now carry on as normal
-  mypdu.setSCAnumber("+12125557777");  // this line may be unnecessary
+  //mypdu.setSCAnumber("+12125557777");  // this line may be unnecessary
+  mypdu.setSCAnumber();  // use default SCA
   int len = mypdu.encodePDU("+12125556666",finalMsg);
   if (len < 0) {
     .....
@@ -292,7 +297,8 @@ void setup() {
   delay(500);
   GSM.print("AT+CMGF=0\r");  // put modem into PDU mode
   delay(500);
-  mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here, if unnecessary
+  //mypdu.SetSCAnumber("+xxxxxxxx");   // insert your networks SCA number here, if unnecessary
+  mypdu.SetSCAnumber();   // use default SCA
   int len = mypdu.encodePDU(nat,message); 
   if (len < 0) {
     switch (len) {
@@ -373,13 +379,24 @@ Fix issues #36 and #39
 Fixed  typo on README.md
 ## 0.5.10
 Fixed issue 44  
-setSCAnumber section modified in the README
+## 0.5.11
+Fixed issues 46,47  
+setSCAnumber chapter modified in the README to reflect setting default SCA
 # Open Issues
 ## Network Specific Number
 Issue #26  
-It has been reported that network specific numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 3:* statement in *PDU::decodeAddress* (pdulib.cpp line 1013).
+It has been reported that network specific numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 3:* statement in *PDU::decodeAddress*.
 ```
 case 2: // national number
 [[fallthrough]];
 //case 3: // network specific number
+```
+## Abbreviated Number
+Issue #41  
+It has been reported that abbreviated numbers in incoming messages can be treated the same as a national number. As I have no data to test this I am not changing the source code. However if you want to enable the option, just uncomment the *case 6:* statement in *PDU::decodeAddress*.
+```
+case 2: // national number
+[[fallthrough]];
+//case 3: // network specific number
+//case 6: // abbreviated number
 ```

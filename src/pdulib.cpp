@@ -31,6 +31,8 @@
         in the PDU constructor.
         Add the getOverflow method
   * 0.5.7 Fix issues #27, #28, #30, #32, #33
+  * 0.5.11 Fix issue #47  decodeAddress now returns -1 as an error as 0 is a legal length
+  *        Fix issue #46  set default SCA
  */
 
 #ifndef DESKTOP_PDU
@@ -94,10 +96,16 @@ bool PDU::setAddress(const char *address, /*eAddressType at,*/ eLengthType lt, c
     addressLength = strlen(address);
     if (addressLength < MAX_NUMBER_LENGTH)
     {
-      if (lt == NIBBLES)
+      if (lt == NIBBLES)  // recipient
         buffer[smsOffset++] = addressLength;
-      else
-        buffer[smsOffset++] = ((addressLength + 1) / 2) + 1; // add 1 for length
+      else { // OCTETS, must be SCA, special case if length 0 - use default SCA
+        if (addressLength == 0) {
+          buffer[smsOffset++] = 0; // use default SCA  Issue 46
+          return true;
+        }
+        else
+          buffer[smsOffset++] = ((addressLength + 1) / 2) + 1; // add 1 for length
+      }
       switch (at)
       {
         case INTERNATIONAL_NUMERIC:
@@ -656,7 +664,7 @@ bool PDU::decodePDU(const char *pdu)
   unsigned char X;
   overFlow = false;
   i = decodeAddress(pdu, scabuffin, OCTETS);
-  if (i == 0)
+  if (i < 0) // issue 47
   {
     return false;
   }
@@ -665,7 +673,7 @@ bool PDU::decodePDU(const char *pdu)
   index += 2; // skip over tpdu
   udhPresent = tpdu & (1 << PDU_UDHI);
   i = decodeAddress(&pdu[index], addressBuff, NIBBLES);
-  if (i == 0)
+  if (i < 0)  // error 47
     return false;
   index += i + 4; // skip over sender number length & atn
   // pid = gethex(&pdu[index]); // TP-PID
@@ -995,7 +1003,7 @@ void PDU::BCDtoString(char *output, const char *input, int length)
 
 /*
     returns number of characters to occupied by number part (after length and atn)
-    returns 0 if number cannot be decoded
+    returns -1 if number cannot be decoded ISSUE 47
 */
 int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
 {                           // pdu to readable starts with length octet
@@ -1004,8 +1012,14 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
   // if nibbles length is just the number
   if (et == NIBBLES)
     addressLength = length;
-  else
+  else {
+    // Issue 47 only relevant to SCA
     addressLength = --length * 2;
+    if (addressLength == 0) {
+      *output = 0;
+      return 0;    
+    }
+  }
   pdu += 2; // gethex reads 2 bytes
   // now analyse address type
   int adt = gethex(pdu);
@@ -1022,6 +1036,7 @@ int PDU::decodeAddress(const char *pdu, char *output, eLengthType et)
     case 2: // national number
     //  [[fallthrough]];
     //case 3: // network specific number, Issue #26
+    //case 6: // abbreviated number, Issue #41
       BCDtoString(output, pdu, addressLength);
       if ((addressLength & 1) == 1) // if odd, bump 1
         addressLength++;            // we could do this before calling BCDtoString
@@ -1077,6 +1092,10 @@ void PDU::setSCAnumber(const char *n)
   strcpy(scabuffout, n);
 }
 
+void PDU::setSCAnumber()
+{
+  *scabuffout = 0;
+}
 const char *PDU::getSCAnumber()
 {
   return scabuffin; // from INCOMING SMS
